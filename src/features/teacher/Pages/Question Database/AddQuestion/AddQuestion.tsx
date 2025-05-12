@@ -1,4 +1,4 @@
-import { Box, Button, Paper, SnackbarCloseReason, Typography } from "@mui/material";
+import { Box, Button, Paper, SnackbarCloseReason, Typography, Snackbar, Alert as MuiAlert } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Link } from "react-router-dom";
 import AddQuestionForm from "./AddQuestionForm";
@@ -7,27 +7,59 @@ import Grid from '@mui/material/Grid2';
 import { formatQuestion } from "../../../../../utils/questionFormation";
 import { useCreateQuestionMutation } from "../../../../../redux/features/question/questionApi";
 import Loader from "../../../../../shared/components/Loader";
-import Alert from "../../../../../shared/components/Alert";
 
 const AddQuestion = () => {
     const [numOfForms, setNumOfForms] = useState(1);
     const [question, setQuestion] = useState<Record<string, string>>({});
     const [imageFile, setImageFile] = useState<Record<string, File | null>>({});
     const [category_id, setCategory_id] = useState('');
-    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success' as 'success' | 'error'
+    });
 
     // redux api call
-    const [createQuestion, { error, isSuccess, isLoading }] = useCreateQuestionMutation();
-
-    // const categoryId = categoryData?.data[0]._id || '';
-    // console.log('Inside add question form:', category_id);
+    const [createQuestion, { error, isLoading }] = useCreateQuestionMutation();
 
     // formatting question object to question array
     const questionArray = formatQuestion(question, category_id);
 
+    // Validate MCQ options and correct answer
+    const validateMCQOptions = () => {
+        for (let i = 0; i < numOfForms; i++) {
+            if (question[`type_${i}`] === 'MCQ') {
+                const options = [];
+                for (let j = 1; j <= 4; j++) {
+                    const option = question[`option${j}_${i}`]?.trim();
+                    if (option) {
+                        options.push(option);
+                    }
+                }
+                const correctAnswer = question[`correctOption_${i}`]?.trim();
+
+                if (correctAnswer && !options.includes(correctAnswer)) {
+                    setSnackbar({
+                        open: true,
+                        message: `Correct answer for question ${i + 1} must match one of the provided options`,
+                        severity: 'error'
+                    });
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
     // temporary array
     const handleAddQuestion = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate MCQ options before submitting
+        if (!validateMCQOptions()) {
+            return;
+        }
+
         checkImageFileAsFormData(imageFile);
         console.log(questionArray);
 
@@ -36,7 +68,6 @@ const AddQuestion = () => {
         questionData.append('data', JSON.stringify(questionArray));
 
         // checking whether file object not empty
-
         if (Object.keys(imageFile).length !== 0) {
             for (const key in imageFile) {
                 // checking whether a key has null value in the object
@@ -47,16 +78,23 @@ const AddQuestion = () => {
         }
 
         try {
-            await createQuestion(questionData);
+            await createQuestion(questionData).unwrap();
+            setSnackbar({
+                open: true,
+                message: 'Question(s) added successfully',
+                severity: 'success'
+            });
+            setQuestion({});
+            setImageFile({});
+            setNumOfForms(1);
         } catch (err) {
             console.log(err);
+            setSnackbar({
+                open: true,
+                message: 'Failed to add question(s)',
+                severity: 'error'
+            });
         }
-
-        setQuestion({});
-        setImageFile({});
-        setNumOfForms(1);
-        setOpenSnackbar(true);
-        // set
     };
 
     // close snackbar automatically
@@ -67,7 +105,7 @@ const AddQuestion = () => {
         if (reason === 'clickaway') {
             return;
         }
-        setOpenSnackbar(false);
+        setSnackbar(prev => ({ ...prev, open: false }));
     };
 
     const checkImageFileAsFormData = (fileObj: typeof imageFile) => {
@@ -81,7 +119,6 @@ const AddQuestion = () => {
     };
 
     // removing the selected file
-
     const handleRemoveFile = (e: React.MouseEvent, index) => {
         setImageFile((prev) => {
             const updatedFiles = { ...prev };
@@ -143,7 +180,6 @@ const AddQuestion = () => {
                                             />
                                         </Grid>
                                     </Paper>
-
                                 ))
                             }
                             {/* form buttons */}
@@ -168,14 +204,23 @@ const AddQuestion = () => {
                         </form>
                     </Box>
                 </Paper>
-            </Box >
-            {/* showing alert for what happened after submitting the request */}
-            <Alert
-                openSnackbar={openSnackbar}
-                autoHideDuration={5000}
-                handleCloseSnackbar={handleCloseSnackbar}
-                isSuccess={isSuccess}
-            />
+            </Box>
+
+            {/* Success/Error Snackbar */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <MuiAlert
+                    onClose={handleCloseSnackbar}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </MuiAlert>
+            </Snackbar>
         </>
     );
 };

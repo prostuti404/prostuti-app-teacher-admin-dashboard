@@ -5,6 +5,11 @@ interface IQueryParams {
     division?: string;
     subject?: string;
     chapter?: string;
+    universityType?: string;
+    universityName?: string;
+    unit?: string;
+    jobType?: string;
+    jobName?: string;
 }
 
 const questionAPI = baseApi.injectEndpoints({
@@ -14,10 +19,15 @@ const questionAPI = baseApi.injectEndpoints({
                 // filters: type: questionObj.category_0, division,subject, chapter
                 // console.log('coming from the questionAPI', questionObj);
                 const queryParams: IQueryParams = {
-                    ...(questionObj.category_0 && { type: questionObj.category_0 }),
-                    ...(questionObj.division_0 && { division: questionObj.division_0 }),
-                    ...(questionObj.subject_0 && { subject: questionObj.subject_0 }),
-                    ...(questionObj.chapter_0 && { chapter: questionObj.chapter_0 })
+                    ...(questionObj.category && { type: questionObj.category }),
+                    ...(questionObj.division && { division: questionObj.division }),
+                    ...(questionObj.subject && { subject: questionObj.subject }),
+                    ...(questionObj.chapter && { chapter: questionObj.chapter }),
+                    ...(questionObj.universityType && { universityType: questionObj.universityType }),
+                    ...(questionObj.universityName && { universityName: questionObj.universityName }),
+                    ...(questionObj.unit && { unit: questionObj.unit }),
+                    ...(questionObj.jobType && { jobType: questionObj.jobType }),
+                    ...(questionObj.jobName && { jobName: questionObj.jobName }),
                 };
 
                 let URL = '/category';
@@ -34,7 +44,8 @@ const questionAPI = baseApi.injectEndpoints({
                     url: URL,
                     method: 'GET'
                 };
-            }
+            },
+            providesTags: ['Categories']
         }),
         createQuestion: builder.mutation({
             query: (questionData) => {
@@ -56,6 +67,7 @@ const questionAPI = baseApi.injectEndpoints({
                         return `${acc}${prefix}${key}=${value}`;
                     }, URL);
                 }
+                console.log('URL from academic questionAPI', URL);
                 return {
                     url: URL,
                     method: 'GET'
@@ -90,6 +102,7 @@ const questionAPI = baseApi.injectEndpoints({
                         return `${acc}${prefix}${key}=${value}`;
                     }, URL);
                 }
+                console.log('URL from admission questionAPI', URL);
                 return {
                     url: URL,
                     method: 'GET'

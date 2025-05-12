@@ -11,13 +11,41 @@ const categoryApi = baseApi.injectEndpoints({
             },
             providesTags: ['Categories']
         }),
+        getUnits: builder.query({
+            query: () => {
+                return {
+                    url: '/category/unit',
+                    method: 'GET',
+                };
+            },
+            providesTags: ['Categories']
+        }),
+        getJobTypes: builder.query({
+            query: () => {
+                return {
+                    url: '/category/job-type',
+                    method: 'GET',
+                };
+            },
+            providesTags: ['Categories']
+        }),
+        getJobNames: builder.query({
+            query: () => {
+                return {
+                    url: '/category/job-name',
+                    method: 'GET',
+                };
+            },
+            providesTags: ['Categories']
+        }),
         getCategoryById: builder.query({
             query: ({ id }) => {
                 return {
                     url: `/category/${id}`,
                     method: 'GET',
                 };
-            }
+            },
+            providesTags: ['Categories']
         }),
         getAllCategories: builder.query({
             query: ({ page = 1, limit = 100 }) => {
@@ -66,5 +94,8 @@ export const {
     useGetCategoryByIdQuery,
     useCreateCategoryMutation,
     useUpdateCategoryMutation,
-    useDeleteCategoryMutation
+    useDeleteCategoryMutation,
+    useGetUnitsQuery,
+    useGetJobTypesQuery,
+    useGetJobNamesQuery
 } = categoryApi;
