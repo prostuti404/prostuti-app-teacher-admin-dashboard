@@ -1,5 +1,4 @@
-
-import { Box, Button, Divider, SnackbarCloseReason, Paper, Typography } from "@mui/material";
+import { Box, Button, Divider, Paper, Typography, Snackbar, Alert as MuiAlert, Pagination } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Grid from '@mui/material/Grid2';
@@ -7,13 +6,12 @@ import CustomLabel from "../../../../shared/components/CustomLabel";
 import CustomAutoComplete from "../../../../shared/components/CustomAutoComplete";
 import SearchIcon from '@mui/icons-material/Search';
 import { useState } from "react";
-import { useDeleteQuestionMutation, useGetAllAdmissionQuestionsQuery } from "../../../../redux/features/question/questionApi";
+import { useDeleteQuestionMutation, useGetAllAdmissionQuestionsQuery, useGetCategoryQuery } from "../../../../redux/features/question/questionApi";
 import Loader from "../../../../shared/components/Loader";
 import CustomTextField from "../../../../shared/components/CustomTextField";
 import DeleteConfirmation from "../../../../shared/components/DeleteConfirmation";
-import { fieldNameGenerator } from "../../../../utils/fieldNameGenerator";
-import Alert from "../../../../shared/components/Alert";
 import { hasDataProperty } from "../../../../utils/TypeGuardForErrorMessage";
+import { getUniqueStrings } from "../../../../utils/typeSafeUniqueArrays";
 
 const AdmissionQuestion = () => {
     const [filter, setFilter] = useState<Record<string, string | undefined>>({});
@@ -21,64 +19,96 @@ const AdmissionQuestion = () => {
     const [open, setOpen] = useState(false);
     const [filterToSubmit, setFilterToSubmit] = useState<Record<string, string | undefined>>({});
     const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [page, setPage] = useState(1);
+    const questionsPerPage = 10;
     const navigate = useNavigate();
-    // redux call for getting the list of questions
-    // Initial data fetch without any filters
-    const { data: initialAdmissionQuestionData, isLoading } = useGetAllAdmissionQuestionsQuery({});
-    // filtered data fetching
-    const { data: admissionQuestionData, isLoading: filteredDataLoading, isFetching, refetch } = useGetAllAdmissionQuestionsQuery(filterToSubmit);
-    // delete question function from redux
 
-    // { isLoading: questionDeleting, error, isSuccess }
-    const [deleteQuestion, { isLoading: questionDeleting, isSuccess, error }] = useDeleteQuestionMutation();
+    // Question type options
+    const questionTypes = ['MCQ', 'Written'];
+
+    // Get category data for filtering
+    const { data: categoryData } = useGetCategoryQuery({
+        category: 'Admission',
+        ...(filter.universityType && { universityType: filter.universityType }),
+        ...(filter.universityName && { universityName: filter.universityName }),
+        ...(filter.unit && { unit: filter.unit }),
+        ...(filter.subject && { subject: filter.subject }),
+        ...(filter.chapter && { chapter: filter.chapter })
+    });
+
+    // redux call for getting the list of questions
+    const { data: admissionQuestionData, isLoading: filteredDataLoading, isFetching, refetch } = useGetAllAdmissionQuestionsQuery(filterToSubmit);
+
+    // delete question function from redux
+    const [deleteQuestion, { isLoading: questionDeleting, error }] = useDeleteQuestionMutation();
+
+    // Get unique values for filters
+    const universityTypes = getUniqueStrings(categoryData?.data || [], 'universityType');
+    const universityNames = getUniqueStrings(categoryData?.data || [], 'universityName');
+    const units = getUniqueStrings(categoryData?.data || [], 'unit');
+    const subjects = getUniqueStrings(categoryData?.data || [], 'subject');
+    const chapters = getUniqueStrings(categoryData?.data || [], 'chapter');
+
+    // Check if chapters exist in the data
+    const hasChapters = categoryData?.data?.some(item => item.chapter);
 
     //^ selecting the filters
     const handleFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFilter((prevState) => ({ ...prevState, [name]: value === '' ? undefined : value }));
+
+        setFilter((prevState) => {
+            const newState = { ...prevState, [name]: value === '' ? undefined : value };
+
+            if (name === 'universityType') {
+                delete newState.universityName;
+                delete newState.unit;
+                delete newState.subject;
+                delete newState.chapter;
+            } else if (name === 'universityName') {
+                delete newState.unit;
+                delete newState.subject;
+                delete newState.chapter;
+            } else if (name === 'unit') {
+                delete newState.subject;
+                delete newState.chapter;
+            } else if (name === 'subject') {
+                delete newState.chapter;
+            }
+
+            return newState;
+        });
     };
+
+
 
     //*go back functionality
     const handleGoBack = () => {
         navigate('/teacher/question-database');
     };
 
-
     // confirming the filters to fetch data based on that
     const confirmFilter = (e: React.MouseEvent) => {
         e.preventDefault();
         // checking whether one or more filter keys value are undefined then deleting that key
-        for (const [key, value] of Object.entries(filter)) {
-            if (value === undefined || value === '') {
-                delete filter[key];
+        const cleanedFilter = Object.entries(filter).reduce((acc, [key, value]) => {
+            if (value !== undefined && value !== '' && value !== 'All') {
+                acc[key] = value;
             }
-        }
-        setFilterToSubmit({ ...filter });
+            return acc;
+        }, {} as Record<string, string>);
+
+        setPage(1);
+        // setFilterToSubmit({ ...cleanedFilter, page: page.toString(), limit: '10' });
+        setFilterToSubmit(cleanedFilter);
         refetch();
-        setFilter({});
     };
 
+    console.log('filters of admission question', filterToSubmit);
     //^handle delete from database
-
     const deleteQuestionFromDatabase = async (id: string) => {
         await deleteQuestion(id);
         setQuestionId('');
         setOpenSnackbar(true);
-    };
-
-    //! fetching all academic questions
-    const fieldNameObj = {
-        'Type': [...new Set(initialAdmissionQuestionData?.data?.data.map((item: typeof initialAdmissionQuestionData) => item.type))] as string[],
-        'Subject': [...new Set(initialAdmissionQuestionData?.data?.data.map((item: typeof initialAdmissionQuestionData) => item?.category[0].subject))] as string[],
-        'University Type': [...new Set(initialAdmissionQuestionData?.data?.data.map((item: typeof initialAdmissionQuestionData) => item?.category[0].universityType))] as string[],
-        'University Name': [...new Set(initialAdmissionQuestionData?.data?.data.map((item: typeof initialAdmissionQuestionData) => item?.category[0].universityName))] as string[],
-    };
-
-    //^ render options for autocompletes
-
-    const getFieldOptions = (fieldName: string) => {
-        // using the initial full dataset for dropdown options
-        return fieldNameObj[fieldName as keyof typeof fieldNameObj] || [];
     };
 
     //*delete confirmation functions
@@ -89,24 +119,17 @@ const AdmissionQuestion = () => {
     const handleDeleteClose = () => {
         setOpen(false);
     };
-    //  || questionDeleting
-    if (isLoading || filteredDataLoading || questionDeleting) {
+
+    if (filteredDataLoading || questionDeleting) {
         return (<Loader />);
     }
 
-    //! close snackbar automatically
-    const handleCloseSnackbar = (
-        event: React.SyntheticEvent | Event,
-        reason?: SnackbarCloseReason
-    ) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-        setOpenSnackbar(false);
-    };
-
-    console.log('Primary Filters', filter);
-    console.log('Delete mutation data error', error);
+    // ✅ Extract all questions and apply pagination
+    const allQuestions = admissionQuestionData?.data?.data || [];
+    const paginatedQuestions = allQuestions.slice(
+        (page - 1) * questionsPerPage,
+        page * questionsPerPage
+    );
 
     return (
         <Box sx={{ width: '100%', height: 'auto' }}>
@@ -134,24 +157,71 @@ const AdmissionQuestion = () => {
                                 value='Admission'
                             />
                         </Grid>
-                        {/* subsequent filters */}
-                        {
-                            Object.keys(fieldNameObj).map((name, index) => (
-                                <Grid size={2}>
-                                    <CustomLabel fieldName={name} />
-                                    <CustomAutoComplete
-                                        key={index}
-                                        options={getFieldOptions(name)}
-                                        value={filter[fieldNameGenerator(name)]}
-                                        defaultValue={filter[fieldNameGenerator(name)]}
-                                        handleInput={handleFilter}
-                                        name={fieldNameGenerator(name)}
-                                    />
-                                </Grid>
-                            ))
-                        }
+                        <Grid size={2}>
+                            <CustomLabel fieldName={'Question Type'} />
+                            <CustomAutoComplete
+                                options={questionTypes}
+                                value={filter.type}
+                                defaultValue={filter.type}
+                                handleInput={handleFilter}
+                                name={'type'}
+                            />
+                        </Grid>
+                        <Grid size={2}>
+                            <CustomLabel fieldName={'University Type'} />
+                            <CustomAutoComplete
+                                options={universityTypes}
+                                value={filter.universityType}
+                                defaultValue={filter.universityType}
+                                handleInput={handleFilter}
+                                name={'universityType'}
+                            />
+                        </Grid>
+                        <Grid size={2}>
+                            <CustomLabel fieldName={'University Name'} />
+                            <CustomAutoComplete
+                                options={universityNames}
+                                value={filter.universityName}
+                                defaultValue={filter.universityName}
+                                handleInput={handleFilter}
+                                name={'universityName'}
+                            />
+                        </Grid>
+                        {filter.universityType === 'University' && (
+                            <Grid size={2}>
+                                <CustomLabel fieldName={'Unit'} />
+                                <CustomAutoComplete
+                                    options={units}
+                                    value={filter.unit}
+                                    defaultValue={filter.unit}
+                                    handleInput={handleFilter}
+                                    name={'unit'}
+                                />
+                            </Grid>
+                        )}
+                        <Grid size={2}>
+                            <CustomLabel fieldName={'Subject'} />
+                            <CustomAutoComplete
+                                options={subjects}
+                                value={filter.subject}
+                                defaultValue={filter.subject}
+                                handleInput={handleFilter}
+                                name={'subject'}
+                            />
+                        </Grid>
+                        {hasChapters && (
+                            <Grid size={2}>
+                                <CustomLabel fieldName={'Chapter'} />
+                                <CustomAutoComplete
+                                    options={chapters}
+                                    value={filter.chapter}
+                                    defaultValue={filter.chapter}
+                                    handleInput={handleFilter}
+                                    name={'chapter'}
+                                />
+                            </Grid>
+                        )}
                         <Grid size={2} sx={{ alignSelf: 'flex-end' }}>
-                            {/* <CustomLabel fieldName='' /> */}
                             <Button variant='contained' sx={{ width: '100%', height: '44px', borderRadius: '8px', fontSize: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}
                                 onClick={(e) => confirmFilter(e)}
                             >
@@ -167,19 +237,18 @@ const AdmissionQuestion = () => {
                             (isFetching) && (<Loader />)
                         }
                         {
-                            admissionQuestionData?.data?.data.length === 0 && (
+                            paginatedQuestions.length === 0 && (
                                 <Typography variant='h3' align="center">No Questions Available</Typography>
                             )
                         }
                         {
-                            admissionQuestionData?.data?.data.map((question: typeof admissionQuestionData, index: number) => (
+                            paginatedQuestions.map((question: typeof admissionQuestionData, index: number) => (
                                 <Grid container spacing={2} key={index}>
                                     {/* delete question button */}
                                     <Button
                                         onClick={() => {
                                             handleDeleteClickOpen();
                                             setQuestionId(question._id);
-                                            console.log('question to delete:', question._id);
                                         }}
                                         variant="outlined"
                                         size="small"
@@ -240,12 +309,23 @@ const AdmissionQuestion = () => {
                                 </Grid>
                             ))
                         }
-
+                        {/* Pagination */}
+                        {allQuestions.length > questionsPerPage && (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                                <Pagination
+                                    count={Math.ceil(allQuestions.length / questionsPerPage)}
+                                    page={page}
+                                    onChange={(event, value) => setPage(value)}
+                                    color="primary"
+                                />
+                            </Box>
+                        )}
                     </Paper>
                 </Box>
-            </Paper >
+            </Paper>
             {/* delete confirmation modal */}
             <DeleteConfirmation
+                type="question"
                 id={questionId}
                 deleteFunction={deleteQuestionFromDatabase}
                 handleDeleteClose={handleDeleteClose}
@@ -253,16 +333,22 @@ const AdmissionQuestion = () => {
             />
             {/* Alert message */}
             {hasDataProperty(error) && (
-                <Alert
-                    message={error.data.message}
-                    openSnackbar={openSnackbar}
-                    autoHideDuration={5000}
-                    handleCloseSnackbar={handleCloseSnackbar}
-                    isSuccess={isSuccess}
-                />
+                <Snackbar
+                    open={openSnackbar}
+                    autoHideDuration={4000}
+                    onClose={() => setOpenSnackbar(false)}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                >
+                    <MuiAlert
+                        onClose={() => setOpenSnackbar(false)}
+                        severity="error"
+                        sx={{ width: '100%' }}
+                    >
+                        {error.data.message}
+                    </MuiAlert>
+                </Snackbar>
             )}
         </Box>
-
     );
 };
 

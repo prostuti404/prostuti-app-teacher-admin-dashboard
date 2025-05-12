@@ -10,11 +10,10 @@ import { useGetAllCategoryTypesQuery } from "../../../../redux/features/category
 import Loader from "../../../../shared/components/Loader";
 import { saveCourseIdToStore } from "../../../../redux/features/course/courseSlice";
 import { useGetCategoryForCourseQuery, useSaveCourseMutation } from "../../../../redux/features/course/courseApi";
-// import Alert from "../../../../shared/components/Alert";
+import { useGetUnitsQuery, useGetJobTypesQuery, useGetJobNamesQuery } from "../../../../redux/features/category/categoryApi";
 import { useNavigate } from "react-router-dom";
 import { getUniqueStrings } from "../../../../utils/typeSafeUniqueArrays";
 import Alert from '@mui/material/Alert';
-// import { CourseState } from "../../../../types/types";
 
 type CourseDetailsProps = {
     setActiveSteps?: React.Dispatch<React.SetStateAction<number>>;
@@ -43,9 +42,7 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
 
     // react router hook
     const navigate = useNavigate();
-    //for error handling
-    // const [error, setError] = useState<any>();
-    // course details
+
     const [courseDetails, setCourseDetails] = useState({
         name: "",
         details: "",
@@ -62,6 +59,9 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
         chapter: '',
         universityName: '',
         universityType: '',
+        unit: '', // new field for Admission category
+        jobType: '', // new field for Job category
+        jobName: '', // new field for Job category
     });
 
     // creating a query parameter object
@@ -72,23 +72,26 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
         ...(categoryParams.chapter && { chapter: categoryParams.chapter }),
         ...(categoryParams.universityName && { universityName: categoryParams.universityName }),
         ...(categoryParams.universityType && { universityType: categoryParams.universityType }),
+        ...(categoryParams.unit && { unit: categoryParams.unit }),
+        ...(categoryParams.jobType && { jobType: categoryParams.jobType }),
+        ...(categoryParams.jobName && { jobName: categoryParams.jobName }),
     };
 
-    // modifying the categoryQueryParams
-    // categoryQueryParams.category = 
-    // fetching the teacherId from redux store
-    // const { userId } = useAppSelector((state) => state.auth.user);
     // fetching all the categories from an api call
     const { data: categoryTypes, isLoading } = useGetAllCategoryTypesQuery({});
     // redux api call for fetching all the categories
     const { data: categoryData, isLoading: categoryLoading } = useGetCategoryForCourseQuery(categoryQueryParams);
+    // fetching units, job types and job names
+    const { data: unitsData, isLoading: unitsLoading } = useGetUnitsQuery({});
+    const { data: jobTypesData, isLoading: jobTypesLoading } = useGetJobTypesQuery({});
+    const { data: jobNamesData, isLoading: jobNamesLoading } = useGetJobNamesQuery({});
     // calling the create course method from redux
     const [saveCourse, { isSuccess, isLoading: creationLoader }] = useSaveCourseMutation();
 
     // setting the data to local redux store
     const dispatch = useAppDispatch();
 
-    // calling the imerative handle to execute submit handler from the parent component
+    // calling the imperative handle to execute submit handler from the parent component
     useImperativeHandle(ref, () => ({
         submitForm: () => {
             handleSubmit();
@@ -96,20 +99,22 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
     }));
 
     // when calling the mutation api
-
-    if (isLoading || categoryLoading || creationLoader) {
+    if (isLoading || categoryLoading || creationLoader || unitsLoading || jobTypesLoading || jobNamesLoading) {
         return <Loader />;
     }
 
     // extracting divisions subjects, chapter, universityType, universityName, from the category data and creating unique array. The getUniqueStrings is a custom function helping to provide type safety.
-
     const divisions = getUniqueStrings(categoryData?.data || [], 'division');
     const subjects = getUniqueStrings(categoryData?.data || [], 'subject');
     const chapters = getUniqueStrings(categoryData?.data || [], 'chapter');
     const universityNames = getUniqueStrings(categoryData?.data || [], 'universityName');
     const universityTypes = getUniqueStrings(categoryData?.data || [], 'universityType');
+    const units = getUniqueStrings(unitsData?.data || [], 'unit');
+    const jobTypes = getUniqueStrings(jobTypesData?.data || [], 'jobType');
+    const jobNames = getUniqueStrings(jobNamesData?.data || [], 'jobName');
 
     const categoryId = categoryData?.data[0]?._id;
+    console.log('filtered category id', categoryId);
 
     //^handling the cover image change
     const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,64 +151,6 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
 
     };
 
-    // const handleSubmit = async (e?: React.FormEvent) => {
-    //     console.log('handleSubmit clicked');
-    //     e?.preventDefault();
-    //     // creating a formData variable
-    //     const courseData = new FormData();
-    //     // appending cover image to the courseData object
-    //     if (coverImg) courseData.append('coverImage', coverImg);
-    //     // ensure the teacher ID is added to courseDetails
-    //     const updatedCourseDetails = {
-    //         ...courseDetails,
-    //         // teacher_id: userId,
-    //         category_id: categoryId
-    //     };
-    //     // appending course details data to the courseDetails object
-    //     courseData.append('courseData', JSON.stringify(updatedCourseDetails));
-
-    //     // sending the course details to backend through redux toolkit
-    //     try {
-    //         const courseResponse = await saveCourse(courseData);
-    //         const course_id = courseResponse?.data.data?._id;
-    //         dispatch(saveCourseIdToStore({ course_id: course_id }));
-    //         // restoring previous category params
-    //         setCategoryParams({
-    //             category: '',
-    //             division: '',
-    //             subject: '',
-    //             chapter: '',
-    //             universityName: '',
-    //             universityType: '',
-    //         });
-    //         setCourseDetails({
-    //             name: "",
-    //             details: "",
-    //             isPending: true,
-    //             isPublished: false,
-    //             teacher_id: "",
-    //         });
-    //         //navigate user to the add lesson page once all the data has been saved
-    //         navigate('/teacher/create-course/create-lessons');
-    //         // checking whether setActiveSteps is available
-    //         setActiveSteps?.(prevStep => prevStep + 1);
-    //     } catch (err) {
-    //         console.log(err);
-    //         // Resetting previous errors
-    //         setErrors({});
-    //         // If it matches the error structure
-    //         if (err?.data?.errorSources) {
-    //             const errorMap: { [key: string]: string[]; } = {};
-    //             err.data.errorSources.forEach((source: { path: string, message: string; }) => {
-    //                 if (!errorMap[source.path]) {
-    //                     errorMap[source.path] = [];
-    //                 }
-    //                 errorMap[source.path].push(source.message);
-    //             });
-    //             setErrors(errorMap);
-    //         }
-    //     }
-    // };
 
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -281,6 +228,9 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
             chapter: '',
             universityName: '',
             universityType: '',
+            unit: '',
+            jobType: '',
+            jobName: '',
         });
         setCourseDetails({
             name: "",
@@ -382,6 +332,20 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                                 value={categoryParams.universityName}
                                             />
                                         </Grid>
+                                        {categoryParams.universityType === 'University' && (
+                                            <Grid size={4}>
+                                                <CustomLabel fieldName="Unit*" />
+                                                <CustomAutoComplete
+                                                    options={units || []}
+                                                    name="unit"
+                                                    handleInput={handleCategory}
+                                                    required={true}
+                                                    value={categoryParams.unit}
+                                                    error={!!errors.unit?.length}
+                                                    helperText={errors.unit?.join(' ')}
+                                                />
+                                            </Grid>
+                                        )}
                                         <Grid size={4}>
                                             <CustomLabel fieldName="Subject*" />
                                             <CustomAutoComplete
@@ -392,13 +356,38 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                                 value={categoryParams.subject}
                                             />
                                         </Grid>
+
                                     </>)
                             }
                             {/* in case of job */}
                             {
                                 (categoryParams.category === 'Job') && (
                                     <>
-                                        <Grid size={12}>
+                                        <Grid size={4}>
+                                            <CustomLabel fieldName="Job Type*" />
+                                            <CustomAutoComplete
+                                                options={jobTypes || []}
+                                                name="jobType"
+                                                handleInput={handleCategory}
+                                                required={true}
+                                                value={categoryParams.jobType}
+                                                error={!!errors.jobType?.length}
+                                                helperText={errors.jobType?.join(' ')}
+                                            />
+                                        </Grid>
+                                        <Grid size={4}>
+                                            <CustomLabel fieldName="Job Name*" />
+                                            <CustomAutoComplete
+                                                options={jobNames || []}
+                                                name="jobName"
+                                                handleInput={handleCategory}
+                                                required={true}
+                                                value={categoryParams.jobName}
+                                                error={!!errors.jobName?.length}
+                                                helperText={errors.jobName?.join(' ')}
+                                            />
+                                        </Grid>
+                                        <Grid size={4}>
                                             <CustomLabel fieldName="Subject*" />
                                             <CustomAutoComplete
                                                 options={subjects || []}
@@ -460,9 +449,6 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                 />
                             </Grid>
                         </Grid>
-                        {/* <Button type="submit">
-                        Send to Redux
-                    </Button> */}
                     </form>
                 </Paper>
             </Box>
