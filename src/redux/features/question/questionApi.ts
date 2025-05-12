@@ -31,7 +31,7 @@ const questionAPI = baseApi.injectEndpoints({
                 };
 
                 let URL = '/category';
-                console.log('from questionAPI', queryParams);
+                // console.log('from questionAPI', queryParams);
 
 
                 if (queryParams.type) {
@@ -40,7 +40,6 @@ const questionAPI = baseApi.injectEndpoints({
                         return `${acc}${prefix}${key}=${value}`;
                     }, URL);
                 }
-                console.log('URL from questionAPI', URL);
                 return {
                     url: URL,
                     method: 'GET'
@@ -103,6 +102,7 @@ const questionAPI = baseApi.injectEndpoints({
                         return `${acc}${prefix}${key}=${value}`;
                     }, URL);
                 }
+                console.log('URL from admission questionAPI', URL);
                 return {
                     url: URL,
                     method: 'GET'

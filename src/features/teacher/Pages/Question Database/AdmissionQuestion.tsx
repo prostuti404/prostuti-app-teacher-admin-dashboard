@@ -20,6 +20,7 @@ const AdmissionQuestion = () => {
     const [filterToSubmit, setFilterToSubmit] = useState<Record<string, string | undefined>>({});
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [page, setPage] = useState(1);
+    const questionsPerPage = 10;
     const navigate = useNavigate();
 
     // Question type options
@@ -54,9 +55,10 @@ const AdmissionQuestion = () => {
     //^ selecting the filters
     const handleFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+
         setFilter((prevState) => {
             const newState = { ...prevState, [name]: value === '' ? undefined : value };
-            // Clear dependent fields when parent field changes
+
             if (name === 'universityType') {
                 delete newState.universityName;
                 delete newState.unit;
@@ -72,9 +74,12 @@ const AdmissionQuestion = () => {
             } else if (name === 'subject') {
                 delete newState.chapter;
             }
+
             return newState;
         });
     };
+
+
 
     //*go back functionality
     const handleGoBack = () => {
@@ -86,23 +91,19 @@ const AdmissionQuestion = () => {
         e.preventDefault();
         // checking whether one or more filter keys value are undefined then deleting that key
         const cleanedFilter = Object.entries(filter).reduce((acc, [key, value]) => {
-            if (value !== undefined && value !== '') {
+            if (value !== undefined && value !== '' && value !== 'All') {
                 acc[key] = value;
             }
             return acc;
         }, {} as Record<string, string>);
 
-        setFilterToSubmit({ ...cleanedFilter, page: page.toString(), limit: '10' });
+        setPage(1);
+        // setFilterToSubmit({ ...cleanedFilter, page: page.toString(), limit: '10' });
+        setFilterToSubmit(cleanedFilter);
         refetch();
     };
 
-    // Handle page change
-    const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-        setPage(value);
-        setFilterToSubmit(prev => ({ ...prev, page: value.toString(), limit: '10' }));
-        refetch();
-    };
-
+    console.log('filters of admission question', filterToSubmit);
     //^handle delete from database
     const deleteQuestionFromDatabase = async (id: string) => {
         await deleteQuestion(id);
@@ -123,7 +124,12 @@ const AdmissionQuestion = () => {
         return (<Loader />);
     }
 
-    console.log('retrieved data', admissionQuestionData?.data);
+    // ✅ Extract all questions and apply pagination
+    const allQuestions = admissionQuestionData?.data?.data || [];
+    const paginatedQuestions = allQuestions.slice(
+        (page - 1) * questionsPerPage,
+        page * questionsPerPage
+    );
 
     return (
         <Box sx={{ width: '100%', height: 'auto' }}>
@@ -231,12 +237,12 @@ const AdmissionQuestion = () => {
                             (isFetching) && (<Loader />)
                         }
                         {
-                            admissionQuestionData?.data?.data.length === 0 && (
+                            paginatedQuestions.length === 0 && (
                                 <Typography variant='h3' align="center">No Questions Available</Typography>
                             )
                         }
                         {
-                            admissionQuestionData?.data?.data.map((question: typeof admissionQuestionData, index: number) => (
+                            paginatedQuestions.map((question: typeof admissionQuestionData, index: number) => (
                                 <Grid container spacing={2} key={index}>
                                     {/* delete question button */}
                                     <Button
@@ -304,12 +310,12 @@ const AdmissionQuestion = () => {
                             ))
                         }
                         {/* Pagination */}
-                        {admissionQuestionData?.data?.data.length > 0 && (
+                        {allQuestions.length > questionsPerPage && (
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
                                 <Pagination
-                                    count={Math.ceil(admissionQuestionData?.meta?.count / 10)}
+                                    count={Math.ceil(allQuestions.length / questionsPerPage)}
                                     page={page}
-                                    onChange={handlePageChange}
+                                    onChange={(event, value) => setPage(value)}
                                     color="primary"
                                 />
                             </Box>
