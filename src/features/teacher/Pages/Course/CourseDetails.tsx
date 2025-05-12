@@ -11,11 +11,9 @@ import Loader from "../../../../shared/components/Loader";
 import { saveCourseIdToStore } from "../../../../redux/features/course/courseSlice";
 import { useGetCategoryForCourseQuery, useSaveCourseMutation } from "../../../../redux/features/course/courseApi";
 import { useGetUnitsQuery, useGetJobTypesQuery, useGetJobNamesQuery } from "../../../../redux/features/category/categoryApi";
-// import Alert from "../../../../shared/components/Alert";
 import { useNavigate } from "react-router-dom";
 import { getUniqueStrings } from "../../../../utils/typeSafeUniqueArrays";
 import Alert from '@mui/material/Alert';
-// import { CourseState } from "../../../../types/types";
 
 type CourseDetailsProps = {
     setActiveSteps?: React.Dispatch<React.SetStateAction<number>>;
@@ -44,9 +42,7 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
 
     // react router hook
     const navigate = useNavigate();
-    //for error handling
-    // const [error, setError] = useState<any>();
-    // course details
+
     const [courseDetails, setCourseDetails] = useState({
         name: "",
         details: "",
@@ -81,10 +77,6 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
         ...(categoryParams.jobName && { jobName: categoryParams.jobName }),
     };
 
-    // modifying the categoryQueryParams
-    // categoryQueryParams.category = 
-    // fetching the teacherId from redux store
-    // const { userId } = useAppSelector((state) => state.auth.user);
     // fetching all the categories from an api call
     const { data: categoryTypes, isLoading } = useGetAllCategoryTypesQuery({});
     // redux api call for fetching all the categories
@@ -457,9 +449,6 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                 />
                             </Grid>
                         </Grid>
-                        {/* <Button type="submit">
-                        Send to Redux
-                    </Button> */}
                     </form>
                 </Paper>
             </Box>

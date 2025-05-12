@@ -68,6 +68,7 @@ const questionAPI = baseApi.injectEndpoints({
                         return `${acc}${prefix}${key}=${value}`;
                     }, URL);
                 }
+                console.log('URL from academic questionAPI', URL);
                 return {
                     url: URL,
                     method: 'GET'

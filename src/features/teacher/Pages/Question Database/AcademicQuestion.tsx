@@ -1,4 +1,4 @@
-import { Box, Button, Divider, Paper, SnackbarCloseReason, Typography } from "@mui/material";
+import { Box, Button, Divider, Paper, Typography, Snackbar, Alert as MuiAlert, Pagination } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Grid from '@mui/material/Grid2';
@@ -6,12 +6,12 @@ import CustomLabel from "../../../../shared/components/CustomLabel";
 import CustomAutoComplete from "../../../../shared/components/CustomAutoComplete";
 import SearchIcon from '@mui/icons-material/Search';
 import { useState } from "react";
-import { useDeleteQuestionMutation, useGetAllAcademicQuestionsQuery } from "../../../../redux/features/question/questionApi";
+import { useDeleteQuestionMutation, useGetAllAcademicQuestionsQuery, useGetCategoryQuery } from "../../../../redux/features/question/questionApi";
 import Loader from "../../../../shared/components/Loader";
 import CustomTextField from "../../../../shared/components/CustomTextField";
 import DeleteConfirmation from "../../../../shared/components/DeleteConfirmation";
-import Alert from "../../../../shared/components/Alert";
 import { hasDataProperty } from "../../../../utils/TypeGuardForErrorMessage";
+import { getUniqueStrings } from "../../../../utils/typeSafeUniqueArrays";
 
 const AcademicQuestion = () => {
     const [filter, setFilter] = useState<Record<string, string | undefined>>({});
@@ -19,19 +19,50 @@ const AcademicQuestion = () => {
     const [open, setOpen] = useState(false);
     const [filterToSubmit, setFilterToSubmit] = useState<Record<string, string | undefined>>({});
     const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [page, setPage] = useState(1);
+    const questionsPerPage = 10;
     const navigate = useNavigate();
+
+    // Question type options
+    const questionTypes = ['MCQ', 'Written'];
+
+    // Get category data for filtering
+    const { data: categoryData } = useGetCategoryQuery({
+        category: 'Academic',
+        ...(filter.division && { division: filter.division }),
+        ...(filter.subject && { subject: filter.subject }),
+        ...(filter.chapter && { chapter: filter.chapter })
+    });
+
     // redux call for getting the list of questions
-    // Initial data fetch without any filters
-    const { data: initialQuestionData, isLoading } = useGetAllAcademicQuestionsQuery({});
-    // filtered data fetching
     const { data: questionData, isLoading: filteredDataLoading, isFetching, refetch } = useGetAllAcademicQuestionsQuery(filterToSubmit);
+    console.log('filters', filterToSubmit);
+
     // delete question function from redux
-    const [deleteQuestion, { isLoading: questionDeleting, isSuccess, error }] = useDeleteQuestionMutation();
+    const [deleteQuestion, { isLoading: questionDeleting, error }] = useDeleteQuestionMutation();
+
+    // Get unique values for filters
+    const divisions = getUniqueStrings(categoryData?.data || [], 'division');
+    const subjects = getUniqueStrings(categoryData?.data || [], 'subject');
+    const chapters = getUniqueStrings(categoryData?.data || [], 'chapter');
+
+    // Check if chapters exist in the data
+    const hasChapters = categoryData?.data?.some(item => item.chapter);
 
     //^ selecting the filters
     const handleFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFilter((prevState) => ({ ...prevState, [name]: value === '' ? undefined : value }));
+        setFilter((prevState) => {
+            const newState = { ...prevState, [name]: value === '' ? undefined : value };
+            // Clear dependent fields when parent field changes
+            if (name === 'division') {
+                delete newState.subject;
+                delete newState.chapter;
+            } else if (name === 'subject') {
+                delete newState.chapter;
+            }
+            return newState;
+        });
     };
 
     //*go back functionality
@@ -43,37 +74,24 @@ const AcademicQuestion = () => {
     const confirmFilter = (e: React.MouseEvent) => {
         e.preventDefault();
         // checking whether one or more filter keys value are undefined then deleting that key
-        for (const [key, value] of Object.entries(filter)) {
-            if (value === undefined || value === '') {
-                delete filter[key];
+        const cleanedFilter = Object.entries(filter).reduce((acc, [key, value]) => {
+            if (value !== undefined && value !== '' && value !== 'All') {
+                acc[key] = value;
             }
-        }
-        setFilterToSubmit({ ...filter });
+            return acc;
+        }, {} as Record<string, string>);
+
+        setPage(1);
+        // setFilterToSubmit({ ...cleanedFilter, page: page.toString(), limit: '10' });
+        setFilterToSubmit(cleanedFilter);
         refetch();
-        setFilter({});
     };
 
     //^handle delete from database
-
     const deleteQuestionFromDatabase = async (id: string) => {
         await deleteQuestion(id);
         setQuestionId('');
         setOpenSnackbar(true);
-    };
-
-    //! fetching all academic questions
-    const fieldNameObj = {
-        'Division': [...new Set(initialQuestionData?.data?.data.map((item: typeof initialQuestionData) => item?.category[0].division))] as string[],
-        'Type': [...new Set(initialQuestionData?.data?.data.map((item: typeof initialQuestionData) => item.type))] as string[],
-        'Subject': [...new Set(initialQuestionData?.data?.data.map((item: typeof initialQuestionData) => item?.category[0].subject))] as string[],
-        'Chapter': [...new Set(initialQuestionData?.data?.data.map((item: typeof initialQuestionData) => item?.category[0].chapter))] as string[],
-    };
-
-    // render options for autocompletes
-
-    const getFieldOptions = (fieldName: string) => {
-        // using the initial full dataset for dropdown options
-        return fieldNameObj[fieldName as keyof typeof fieldNameObj] || [];
     };
 
     //*delete confirmation functions
@@ -85,32 +103,25 @@ const AcademicQuestion = () => {
         setOpen(false);
     };
 
-    if (isLoading || filteredDataLoading || questionDeleting) {
+    if (filteredDataLoading || questionDeleting) {
         return (<Loader />);
     }
+    const allQuestions = questionData?.data.data || [];
+    const paginatedQuestions = allQuestions.slice(
+        (page - 1) * questionsPerPage,
+        page * questionsPerPage
+    );
 
-    //! close snackbar automatically
-    const handleCloseSnackbar = (
-        event: React.SyntheticEvent | Event,
-        reason?: SnackbarCloseReason
-    ) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-        setOpenSnackbar(false);
-    };
     return (
         <Box sx={{ width: '100%', height: 'auto' }}>
             <Paper variant="outlined" sx={{ width: '100%', height: 'auto', borderRadius: '10px', p: 3 }}>
                 {/* top title and button section */}
                 <Box component="section" sx={{ display: 'flex', gap: '20px', justifyContent: 'flex-start', alignItems: 'center', mb: 3 }}>
-                    {/* <Link to='/teacher/question-database'> */}
                     <Button variant='outlined' sx={{ width: '36px', height: '36px', borderRadius: '8px', borderColor: "grey.700", color: "#3F3F46" }}
                         onClick={handleGoBack}
                     >
                         <ArrowBackIcon fontSize='small' />
                     </Button>
-                    {/* </Link> */}
                     <Typography variant='h3'>Academic Question</Typography>
                 </Box>
 
@@ -127,24 +138,49 @@ const AcademicQuestion = () => {
                                 value='Academic'
                             />
                         </Grid>
-                        {/* subsequent filters */}
-                        {
-                            Object.keys(fieldNameObj).map((name, index) => (
-                                <Grid size={2}>
-                                    <CustomLabel fieldName={name} />
-                                    <CustomAutoComplete
-                                        key={index}
-                                        options={getFieldOptions(name)}
-                                        value={filter[name.toLowerCase()]}
-                                        defaultValue={filter[name.toLowerCase()]}
-                                        handleInput={handleFilter}
-                                        name={name.toLowerCase()}
-                                    />
-                                </Grid>
-                            ))
-                        }
+                        <Grid size={2}>
+                            <CustomLabel fieldName={'Question Type'} />
+                            <CustomAutoComplete
+                                options={questionTypes}
+                                value={filter.type}
+                                defaultValue={filter.type}
+                                handleInput={handleFilter}
+                                name={'type'}
+                            />
+                        </Grid>
+                        <Grid size={2}>
+                            <CustomLabel fieldName={'Division'} />
+                            <CustomAutoComplete
+                                options={divisions}
+                                value={filter.division}
+                                defaultValue={filter.division}
+                                handleInput={handleFilter}
+                                name={'division'}
+                            />
+                        </Grid>
+                        <Grid size={2}>
+                            <CustomLabel fieldName={'Subject'} />
+                            <CustomAutoComplete
+                                options={subjects}
+                                value={filter.subject}
+                                defaultValue={filter.subject}
+                                handleInput={handleFilter}
+                                name={'subject'}
+                            />
+                        </Grid>
+                        {hasChapters && (
+                            <Grid size={2}>
+                                <CustomLabel fieldName={'Chapter'} />
+                                <CustomAutoComplete
+                                    options={chapters}
+                                    value={filter.chapter}
+                                    defaultValue={filter.chapter}
+                                    handleInput={handleFilter}
+                                    name={'chapter'}
+                                />
+                            </Grid>
+                        )}
                         <Grid size={2} sx={{ alignSelf: 'flex-end' }}>
-                            {/* <CustomLabel fieldName='' /> */}
                             <Button variant='contained' sx={{ width: '100%', height: '44px', borderRadius: '8px', fontSize: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}
                                 onClick={(e) => confirmFilter(e)}
                             >
@@ -160,19 +196,18 @@ const AcademicQuestion = () => {
                             (isFetching) && (<Loader />)
                         }
                         {
-                            questionData?.data?.data.length === 0 && (
+                            paginatedQuestions.length === 0 && (
                                 <Typography variant='h3' align="center">No Questions Available</Typography>
                             )
                         }
                         {
-                            questionData?.data?.data.map((question: typeof questionData, index: number) => (
+                            paginatedQuestions.map((question: typeof questionData, index: number) => (
                                 <Grid container spacing={2} key={index}>
                                     {/* delete question button */}
                                     <Button
                                         onClick={() => {
                                             handleDeleteClickOpen();
                                             setQuestionId(question._id);
-                                            console.log('question to delete:', question._id);
                                         }}
                                         variant="outlined"
                                         size="small"
@@ -233,10 +268,20 @@ const AcademicQuestion = () => {
                                 </Grid>
                             ))
                         }
-
+                        {/* Pagination */}
+                        {allQuestions.length > questionsPerPage && (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                                <Pagination
+                                    count={Math.ceil(allQuestions.length / questionsPerPage)}
+                                    page={page}
+                                    onChange={(event, value) => setPage(value)}
+                                    color="primary"
+                                />
+                            </Box>
+                        )}
                     </Paper>
                 </Box>
-            </Paper >
+            </Paper>
             {/* delete confirmation modal */}
             <DeleteConfirmation
                 type="question"
@@ -246,18 +291,23 @@ const AcademicQuestion = () => {
                 open={open}
             />
             {/* Alert message */}
-            {/* Alert message */}
             {hasDataProperty(error) && (
-                <Alert
-                    message={error.data.message}
-                    openSnackbar={openSnackbar}
-                    autoHideDuration={5000}
-                    handleCloseSnackbar={handleCloseSnackbar}
-                    isSuccess={isSuccess}
-                />
+                <Snackbar
+                    open={openSnackbar}
+                    autoHideDuration={4000}
+                    onClose={() => setOpenSnackbar(false)}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                >
+                    <MuiAlert
+                        onClose={() => setOpenSnackbar(false)}
+                        severity="error"
+                        sx={{ width: '100%' }}
+                    >
+                        {error.data.message}
+                    </MuiAlert>
+                </Snackbar>
             )}
         </Box>
-
     );
 };
 
