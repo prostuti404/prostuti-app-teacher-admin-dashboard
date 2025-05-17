@@ -1,6 +1,13 @@
+import {Link} from "react-router-dom";
+
+
 const PracticeTest = () => {
     return (
-        <div>PracticeTest</div>
+        <div>
+            <Link to="/admin/practice-test-creation">
+                Practice Test
+            </Link>
+        </div>
     );
 };
 

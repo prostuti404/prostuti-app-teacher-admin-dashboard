@@ -27,6 +27,7 @@ import ResourcesList from "../features/teacher/Pages/Materials/Resource/Resource
 import Routine from "../features/teacher/Pages/Materials/Routine";
 import FlashCard from "../features/teacher/Pages/Flashcard/FlashCard";
 import ChildFlashCards from "../features/teacher/Pages/Flashcard/ChildFlashCards";
+import PracticeTestCreation from "../features/admin/Pages/PracticeTestCreation.tsx";
 
 export const adminRoutes = [
   {
@@ -160,5 +161,9 @@ export const adminRoutes = [
   {
     path: "edit-requests",
     element: <EditRequests />,
+  },
+  {
+    path: "practice-test-creation",
+    element: <PracticeTestCreation />,
   },
 ];
