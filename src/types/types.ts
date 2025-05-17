@@ -42,8 +42,11 @@ export interface TNetworkError {
 export interface ICategory {
     subject: string;
     type: string;
-    universityName?: string;
     universityType?: string;
+    universityName?: string;
+    unit?: string;
+    jobType?: string;
+    jobName?: string;
     updatedAt?: string;
     __v?: number;
     _id: string;

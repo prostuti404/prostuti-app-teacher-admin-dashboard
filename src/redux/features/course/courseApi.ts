@@ -84,12 +84,11 @@ const courseApi = baseApi.injectEndpoints({
           ...(questionObj.division && { division: questionObj.division }),
           ...(questionObj.subject && { subject: questionObj.subject }),
           ...(questionObj.chapter && { chapter: questionObj.chapter }),
-          ...(questionObj.universityName && {
-            universityName: questionObj.universityName,
-          }),
-          ...(questionObj.universityType && {
-            universityType: questionObj.universityType,
-          }),
+          ...(questionObj.universityName && { universityName: questionObj.universityName }),
+          ...(questionObj.universityType && { universityType: questionObj.universityType }),
+          ...(questionObj.unit && { unit: questionObj.unit }),
+          ...(questionObj.jobType && { jobType: questionObj.jobType }),
+          ...(questionObj.jobName && { jobName: questionObj.jobName }),
         };
 
         let URL = "/category";
@@ -104,6 +103,7 @@ const courseApi = baseApi.injectEndpoints({
             URL
           );
         }
+        console.log('from courseAPI', URL);
         return {
           url: URL,
           method: "GET",

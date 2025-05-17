@@ -5,10 +5,10 @@ import Grid from '@mui/material/Grid2';
 import CustomTextField from "../../../../../shared/components/CustomTextField";
 import { useGetCategoryQuery } from "../../../../../redux/features/question/questionApi";
 import Loader from "../../../../../shared/components/Loader";
-import { FormControl, MenuItem, TextField, Typography, IconButton } from "@mui/material";
+import { FormControl, MenuItem, TextField, Typography, IconButton, Snackbar, Alert } from "@mui/material";
 import { getUniqueStrings } from "../../../../../utils/typeSafeUniqueArrays";
 import AdornedTextField from "../../../../../shared/components/AdornedTextField";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { teal } from "@mui/material/colors";
 
@@ -21,8 +21,22 @@ type TAddQuestionForm = {
     setImageFile: React.Dispatch<React.SetStateAction<Record<string, File | null>>>;
     imageFile: Record<string, File | null>;
     handleRemoveFile: (e: React.MouseEvent, index: number) => void;
+    onSuccess?: () => void;
+    onError?: (error: Error) => void;
 };
-const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImageFile, imageFile, handleRemoveFile }: TAddQuestionForm) => {
+
+const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImageFile, imageFile, handleRemoveFile, onSuccess, onError }: TAddQuestionForm) => {
+    // Snackbar state
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success' as 'success' | 'error'
+    });
+
+    // Handle snackbar close
+    const handleSnackbarClose = () => {
+        setSnackbar(prev => ({ ...prev, open: false }));
+    };
 
     // creating a reference to capture value of input field
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,7 +46,6 @@ const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImag
     };
 
     // question type selection
-
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setQuestion((prevState) => ({ ...prevState, [name]: value }));
@@ -50,40 +63,78 @@ const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImag
 
     // creating a query parameter object
     const categoryQueryParams = {
-        ...(question.category_0 && { category_0: question.category_0 }),
-        ...(question.division_0 && { division_0: question.division_0 }),
-        ...(question.subject_0 && { subject_0: question.subject_0 }),
-        ...(question.chapter_0 && { chapter_0: question.chapter_0 }),
-        ...(question.universityName_0 && { universityName: question.universityName_0 }),
-        ...(question.universityType_0 && { universityType: question.universityType_0 }),
+        ...(question.category && { category: question.category }),
+        ...(question.division && { division: question.division }),
+        ...(question.subject && { subject: question.subject }),
+        ...(question.chapter && { chapter: question.chapter }),
+        ...(question.universityName && { universityName: question.universityName }),
+        ...(question.universityType && { universityType: question.universityType }),
+        ...(question.unit && { unit: question.unit }),
+        ...(question.jobType && { jobType: question.jobType }),
+        ...(question.jobName && { jobName: question.jobName }),
     };
 
-    // console.log(categoryQueryParams);
-
     // redux api call
-    const { data: categoryData, isLoading } = useGetCategoryQuery(categoryQueryParams);
+    const { data: categoryData, isLoading, error } = useGetCategoryQuery(categoryQueryParams);
 
-    //handling the question queries
+    // Handle error state
+    useEffect(() => {
+        if (error) {
+            setSnackbar({
+                open: true,
+                message: 'Failed to fetch category data',
+                severity: 'error'
+            });
+            onError?.(error as Error);
+        }
+    }, [error, onError]);
 
-    // console.log("from add question form page:", question);
+    // Handle success state
+    useEffect(() => {
+        if (categoryData?.data) {
+            setSnackbar({
+                open: true,
+                message: 'Category data loaded successfully',
+                severity: 'success'
+            });
+            onSuccess?.();
+        }
+    }, [categoryData, onSuccess]);
 
     if (isLoading) {
         return <Loader />;
     }
 
     // extracting divisions subjects, chapter, universityType, universityName, from the category data and creating unique array. The getUniqueStrings is a custom function helping to provide type safety.
-
     const divisions = getUniqueStrings(categoryData?.data || [], 'division');
     const subjects = getUniqueStrings(categoryData?.data || [], 'subject');
     const chapters = getUniqueStrings(categoryData?.data || [], 'chapter');
-    const universityNames = getUniqueStrings(categoryData?.data || [], 'universityName');
     const universityTypes = getUniqueStrings(categoryData?.data || [], 'universityType');
+    const universityNames = getUniqueStrings(categoryData?.data || [], 'universityName');
+    const units = getUniqueStrings(categoryData?.data || [], 'unit');
+    const jobTypes = getUniqueStrings(categoryData?.data || [], 'jobType');
+    const jobNames = getUniqueStrings(categoryData?.data || [], 'jobName');
 
     // narrowed down category
     const categoryId = categoryData?.data[0]?._id || '';
 
     return (
         <>
+            {/* Success/Error Snackbar */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
 
             {/* choosing the question category field */}
             {index === 0 &&
@@ -91,13 +142,13 @@ const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImag
                     <CustomLabel fieldName="Category" />
                     <FormControl fullWidth>
                         <TextField
-                            name={`category_${index}`}
+                            name={`category`}
                             // value={age}
                             onChange={(e) => {
                                 setQuestion({});
                                 setQuestion((prevState) => ({
                                     ...prevState,
-                                    [`category_${index}`]: e.target.value,
+                                    [`category`]: e.target.value,
                                 }));
                             }}
                             size="small"
@@ -137,51 +188,120 @@ const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImag
             </Grid>
             {/* 2nd row filter columns */}
             {
-                (index === 0 && question.category_0 === 'Academic') && (
+                (index === 0 && question.category === 'Academic') && (
                     <>
                         <Grid size={4}>
                             <CustomLabel fieldName="Division" />
-                            <CustomAutoComplete options={divisions || []} name={`division_${index}`} value={question[`division_${index}`]} handleInput={handleInput} required={true} />
+                            <CustomAutoComplete
+                                options={divisions}
+                                name={`division`}
+                                value={question[`division`]}
+                                handleInput={handleInput}
+                                required={true}
+                            />
                         </Grid>
                         <Grid size={4}>
                             <CustomLabel fieldName="Subject" />
-                            <CustomAutoComplete options={subjects || []} name={`subject_${index}`} value={question[`subject_${index}`]} handleInput={handleInput} required={true} />
+                            <CustomAutoComplete
+                                options={subjects}
+                                name={`subject`}
+                                value={question[`subject`]}
+                                handleInput={handleInput}
+                                required={true}
+                            />
                         </Grid>
                         <Grid size={4}>
                             <CustomLabel fieldName="Chapter" />
-                            <CustomAutoComplete options={chapters || []} name={`chapter_${index}`} value={question[`chapter_${index}`]} handleInput={handleInput} required={true} />
+                            <CustomAutoComplete
+                                options={chapters}
+                                name={`chapter`}
+                                value={question[`chapter`]}
+                                handleInput={handleInput}
+                                required={true}
+                            />
                         </Grid>
                     </>)
             }
             {/* in case of admission */}
             {
-                (index === 0 && question.category_0 === 'Admission') && (
+                (index === 0 && question.category === 'Admission') && (
                     <>
                         <Grid size={4}>
                             <CustomLabel fieldName="University Type" />
-                            <CustomAutoComplete options={universityTypes} name={`universityType_${index}`} value={question[`universityType_${index}`]} handleInput={handleInput} required={true} />
+                            <CustomAutoComplete
+                                options={universityTypes}
+                                name={`universityType`}
+                                value={question[`universityType`]}
+                                handleInput={handleInput}
+                                required={true}
+                            />
                         </Grid>
                         <Grid size={4}>
                             <CustomLabel fieldName="University Name" />
-                            <CustomAutoComplete options={universityNames} name={`universityName_${index}`} value={question[`universityName_${index}`]} handleInput={handleInput} required={true} />
+                            <CustomAutoComplete
+                                options={universityNames}
+                                name={`universityName`}
+                                value={question[`universityName`]}
+                                handleInput={handleInput}
+                                required={true}
+                            />
                         </Grid>
+                        {question.universityType === 'University' && (
+                            <Grid size={4}>
+                                <CustomLabel fieldName="Unit" />
+                                <CustomAutoComplete
+                                    options={units}
+                                    name={`unit`}
+                                    value={question[`unit`]}
+                                    handleInput={handleInput}
+                                    required={true}
+                                />
+                            </Grid>
+                        )}
+
                         <Grid size={4}>
                             <CustomLabel fieldName="Subject" />
-                            <CustomAutoComplete options={subjects} name={`subject_${index}`} value={question[`subject_${index}`]} handleInput={handleInput} required={true} />
+                            <CustomAutoComplete
+                                options={subjects}
+                                name={`subject`}
+                                value={question[`subject`]}
+                                handleInput={handleInput}
+                                required={true}
+                            />
                         </Grid>
                     </>)
             }
 
             {/* in case of job */}
             {
-                (index === 0 && question.category_0 === 'Job') && (
+                (index === 0 && question.category === 'Job') && (
                     <>
-                        <Grid size={12}>
+                        <Grid size={4}>
+                            <CustomLabel fieldName="Job Type" />
+                            <CustomAutoComplete
+                                options={jobTypes}
+                                name={`jobType`}
+                                value={question[`jobType`]}
+                                handleInput={handleInput}
+                                required={true}
+                            />
+                        </Grid>
+                        <Grid size={4}>
+                            <CustomLabel fieldName="Job Name" />
+                            <CustomAutoComplete
+                                options={jobNames}
+                                name={`jobName`}
+                                value={question[`jobName`]}
+                                handleInput={handleInput}
+                                required={true}
+                            />
+                        </Grid>
+                        <Grid size={4}>
                             <CustomLabel fieldName="Subject" />
                             <CustomAutoComplete
                                 options={subjects}
-                                name={`subject_${index}`}
-                                value={question[`subject_${index}`]}
+                                name={`subject`}
+                                value={question[`subject`]}
                                 handleInput={handleInput}
                                 required={true}
                             />
