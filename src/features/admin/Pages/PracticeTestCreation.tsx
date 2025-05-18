@@ -73,11 +73,12 @@ const PracticeTestCreation = () => {
     // fetching units, job types and job names
     const { data: unitsData, isLoading: unitsLoading } = useGetUnitsQuery({});
     const { data: jobTypesData, isLoading: jobTypesLoading } = useGetJobTypesQuery({});
-    const { data: jobNamesData, isLoading: jobNamesLoading } = useGetJobNamesQuery({});
+    const { data: jobNamesData, isLoading: jobNamesLoading } = useGetJobNamesQuery(
+        categoryParams.jobType ? { jobType: categoryParams.jobType } : {}
+    );
     // calling the create category method from redux
     const [createCategory, { isLoading: creationLoader }] = useCreateCategoryMutation();
     const [createQuestionPattern, { isLoading: creationQuestionPatternLoader }] = useCreateQuestionPatternMutation();
-
 
     // setting the data to local redux store
     const dispatch = useAppDispatch();
@@ -89,13 +90,55 @@ const PracticeTestCreation = () => {
 
     // extracting divisions subjects, chapter, universityType, universityName, from the category data and creating unique array.
     const divisions = getUniqueStrings(categoryData?.data || [], 'division');
-    const subjects = getUniqueStrings(categoryData?.data || [], 'subject');
     const chapters = getUniqueStrings(categoryData?.data || [], 'chapter');
     const universityNames = getUniqueStrings(categoryData?.data || [], 'universityName');
     const universityTypes = getUniqueStrings(categoryData?.data || [], 'universityType');
-    const units = getUniqueStrings(unitsData?.data || [], 'unit');
-    const jobTypes = getUniqueStrings(jobTypesData?.data || [], 'jobType');
-    const jobNames = getUniqueStrings(jobNamesData?.data || [], 'jobName');
+
+    // Correctly extract units, jobTypes, and jobNames from API responses
+    const units = Array.isArray(unitsData?.data) ?
+        (typeof unitsData.data[0] === 'string' ?
+                unitsData.data :
+                getUniqueStrings(unitsData.data, 'unit')
+        ) : [];
+
+    const jobTypes = Array.isArray(jobTypesData?.data) ?
+        (typeof jobTypesData.data[0] === 'string' ?
+                jobTypesData.data :
+                getUniqueStrings(jobTypesData.data, 'jobType')
+        ) : [];
+
+    const jobNames = Array.isArray(jobNamesData?.data) ?
+        (typeof jobNamesData.data[0] === 'string' ?
+                jobNamesData.data :
+                getUniqueStrings(jobNamesData.data, 'jobName')
+        ) : [];
+
+    // Filter subjects based on category, jobType, or universityType as appropriate
+    let filteredSubjects = [];
+
+    if (categoryData?.data) {
+        let filtered = [...categoryData.data];
+
+        if (categoryParams.category === 'Academic' && categoryParams.division) {
+            filtered = filtered.filter(item => item.division === categoryParams.division);
+        }
+        else if (categoryParams.category === 'Admission' && categoryParams.universityType) {
+            filtered = filtered.filter(item => item.universityType === categoryParams.universityType);
+
+            if (categoryParams.universityName) {
+                filtered = filtered.filter(item => item.universityName === categoryParams.universityName);
+            }
+        }
+        else if (categoryParams.category === 'Job' && categoryParams.jobType) {
+            filtered = filtered.filter(item => item.jobType === categoryParams.jobType);
+
+            if (categoryParams.jobName) {
+                filtered = filtered.filter(item => item.jobName === categoryParams.jobName);
+            }
+        }
+
+        filteredSubjects = getUniqueStrings(filtered, 'subject');
+    }
 
     // Get all category IDs from the categoryData
     const categoryIds = categoryData?.data?.map(category => category._id) || [];
@@ -145,6 +188,11 @@ const PracticeTestCreation = () => {
         } else if (name === 'jobType') {
             // Reset jobName when jobType changes
             updatedCategoryParams.jobName = '';
+            // Also reset subject when jobType changes
+            updatedCategoryParams.subject = '';
+        } else if (name === 'jobName') {
+            // Reset subject when jobName changes
+            updatedCategoryParams.subject = '';
         }
 
         // Update state with the new values
@@ -374,18 +422,20 @@ const PracticeTestCreation = () => {
                                                 helperText={errors.jobType?.join(' ')}
                                             />
                                         </Grid>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="Job Name*" />
-                                            <CustomAutoComplete
-                                                options={jobNames || []}
-                                                name="jobName"
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.jobName}
-                                                error={!!errors.jobName?.length}
-                                                helperText={errors.jobName?.join(' ')}
-                                            />
-                                        </Grid>
+                                        {categoryParams.jobType && (
+                                            <Grid size={4}>
+                                                <CustomLabel fieldName="Job Name*" />
+                                                <CustomAutoComplete
+                                                    options={jobNames || []}
+                                                    name="jobName"
+                                                    handleInput={handleCategory}
+                                                    required={true}
+                                                    value={categoryParams.jobName}
+                                                    error={!!errors.jobName?.length}
+                                                    helperText={errors.jobName?.join(' ')}
+                                                />
+                                            </Grid>
+                                        )}
                                     </>
                                 )}
 
@@ -425,7 +475,7 @@ const PracticeTestCreation = () => {
                                                 <Grid size={4}>
                                                     <CustomLabel fieldName="Subject*" />
                                                     <CustomAutoComplete
-                                                        options={subjects || []}
+                                                        options={filteredSubjects || []}
                                                         name="subject"
                                                         handleInput={(e) => handleSubjectSectionInput(index, e)}
                                                         required={true}
