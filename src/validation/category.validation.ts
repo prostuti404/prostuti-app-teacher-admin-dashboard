@@ -1,63 +1,85 @@
 import { z } from "zod";
 
-export const createCategorySchema = z
-  .object({
-    type: z.string().min(1, "Type is required"),
+// Update the category schema to include new fields
+export const createCategorySchema = z.object({
+    type: z.string({ required_error: "Category type is required" }),
+    // Academic fields
     division: z.string().optional(),
-    subject: z
-      .string({
-        required_error: "Subject is required",
-      })
-      .min(1, "Subject cannot be an empty string"),
+    subject: z.string({ required_error: "Subject is required" }),
     chapter: z.string().optional(),
+    lesson: z.string().optional(), // New field
+
+    // Admission fields
     universityType: z.string().optional(),
     universityName: z.string().optional(),
-  })
-  .strict()
-  .refine(
-    (data) => data.type !== "Academic" || data.division,
-    {
-      message: "Division is required for Academic type.",
-      path: ["division"],
-    }
-  )
-  // Subject is required for Academic type
-  .refine(
-    (data) => data.type !== "Academic" || data.subject,
-    {
-      message: "Subject is required for Academic type.",
-      path: ["subject"],
-    }
-  )
-  // Chapter is required for Academic type
-  .refine(
-    (data) => data.type !== "Academic" || data.chapter,
-    {
-      message: "Chapter is required for Academic type.",
-      path: ["chapter"],
-    }
-  )
-  // University Type is required for Admission type
-  .refine(
-    (data) => data.type !== "Admission" || data.universityType,
-    {
-      message: "University Type is required for Admission type.",
-      path: ["universityType"],
-    }
-  )
-  // University Name is required for Admission type
-  .refine(
-    (data) => data.type !== "Admission" || data.universityName,
-    {
-      message: "University Name is required for Admission type.",
-      path: ["universityName"],
-    }
-  )
-  // Subject is required for Job type
-  .refine(
-    (data) => data.type !== "Job" || data.subject,
-    {
-      message: "Subject is required for Job type.",
-      path: ["subject"],
-    }
-  );
+    unit: z.string().optional(), // New field
+
+    // Job fields
+    jobType: z.string().optional(), // New field
+    jobName: z.string().optional(), // New field
+})
+    .refine(
+        (data) => {
+            // For Academic type, division is required
+            if (data.type === "Academic") {
+                return !!data.division;
+            }
+            return true;
+        },
+        {
+            message: "Division is required for Academic category",
+            path: ["division"],
+        }
+    )
+    .refine(
+        (data) => {
+            // For Admission type, universityType is required
+            if (data.type === "Admission") {
+                return !!data.universityType;
+            }
+            return true;
+        },
+        {
+            message: "University Type is required for Admission category",
+            path: ["universityType"],
+        }
+    )
+    .refine(
+        (data) => {
+            // For Admission type, universityName is required
+            if (data.type === "Admission") {
+                return !!data.universityName;
+            }
+            return true;
+        },
+        {
+            message: "University Name is required for Admission category",
+            path: ["universityName"],
+        }
+    )
+    .refine(
+        (data) => {
+            // For Job type, jobType is required
+            if (data.type === "Job") {
+                return !!data.jobType;
+            }
+            return true;
+        },
+        {
+            message: "Job Type is required for Job category",
+            path: ["jobType"],
+        }
+    )
+    .refine(
+        (data) => {
+            // For Job type, jobName is required
+            if (data.type === "Job") {
+                return !!data.jobName;
+            }
+            return true;
+        },
+        {
+            message: "Job Name is required for Job category",
+            path: ["jobName"],
+        }
+    );
