@@ -39,7 +39,6 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
     const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
     const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
-
     // react router hook
     const navigate = useNavigate();
 
@@ -84,7 +83,9 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
     // fetching units, job types and job names
     const { data: unitsData, isLoading: unitsLoading } = useGetUnitsQuery({});
     const { data: jobTypesData, isLoading: jobTypesLoading } = useGetJobTypesQuery({});
-    const { data: jobNamesData, isLoading: jobNamesLoading } = useGetJobNamesQuery({});
+    const { data: jobNamesData, isLoading: jobNamesLoading } = useGetJobNamesQuery(
+        categoryParams.jobType ? { jobType: categoryParams.jobType } : {}
+    );
     // calling the create course method from redux
     const [saveCourse, { isSuccess, isLoading: creationLoader }] = useSaveCourseMutation();
 
@@ -103,18 +104,71 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
         return <Loader />;
     }
 
-    // extracting divisions subjects, chapter, universityType, universityName, from the category data and creating unique array. The getUniqueStrings is a custom function helping to provide type safety.
+    // extracting divisions subjects, chapter, universityType, universityName, from the category data
     const divisions = getUniqueStrings(categoryData?.data || [], 'division');
-    const subjects = getUniqueStrings(categoryData?.data || [], 'subject');
     const chapters = getUniqueStrings(categoryData?.data || [], 'chapter');
     const universityNames = getUniqueStrings(categoryData?.data || [], 'universityName');
     const universityTypes = getUniqueStrings(categoryData?.data || [], 'universityType');
-    const units = getUniqueStrings(unitsData?.data || [], 'unit');
-    const jobTypes = getUniqueStrings(jobTypesData?.data || [], 'jobType');
-    const jobNames = getUniqueStrings(jobNamesData?.data || [], 'jobName');
+
+    // Handle units data - ensure it's properly extracted
+    const units = Array.isArray(unitsData?.data) ?
+        (typeof unitsData.data[0] === 'string' ?
+                unitsData.data :
+                getUniqueStrings(unitsData.data, 'unit')
+        ) : [];
+
+    // Handle job types data - ensure it's properly extracted
+    const jobTypes = Array.isArray(jobTypesData?.data) ?
+        (typeof jobTypesData.data[0] === 'string' ?
+                jobTypesData.data :
+                getUniqueStrings(jobTypesData.data, 'jobType')
+        ) : [];
+
+    // Handle job names data - ensure it's properly extracted
+    const jobNames = Array.isArray(jobNamesData?.data) ?
+        (typeof jobNamesData.data[0] === 'string' ?
+                jobNamesData.data :
+                getUniqueStrings(jobNamesData.data, 'jobName')
+        ) : [];
+
+    // Filter subjects based on selected category parameters
+    let subjects = getUniqueStrings(categoryData?.data || [], 'subject');
+
+    // Apply filtering based on selected category type
+    if (categoryParams.category === 'Academic' && categoryParams.division) {
+        const filtered = (categoryData?.data || []).filter(item =>
+            item.division === categoryParams.division
+        );
+        subjects = getUniqueStrings(filtered, 'subject');
+    }
+    else if (categoryParams.category === 'Admission' && categoryParams.universityType) {
+        let filtered = (categoryData?.data || []).filter(item =>
+            item.universityType === categoryParams.universityType
+        );
+
+        if (categoryParams.universityName) {
+            filtered = filtered.filter(item =>
+                item.universityName === categoryParams.universityName
+            );
+        }
+
+        subjects = getUniqueStrings(filtered, 'subject');
+    }
+    else if (categoryParams.category === 'Job' && categoryParams.jobType) {
+        let filtered = (categoryData?.data || []).filter(item =>
+            item.jobType === categoryParams.jobType
+        );
+
+        if (categoryParams.jobName) {
+            filtered = filtered.filter(item =>
+                item.jobName === categoryParams.jobName
+            );
+        }
+
+        subjects = getUniqueStrings(filtered, 'subject');
+    }
 
     const categoryId = categoryData?.data[0]?._id;
-    console.log('filtered category id', categoryId);
 
     //^handling the cover image change
     const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +181,6 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
             if (errors.coverImage) {
                 setErrors((prev) => ({ ...prev, coverImage: [] }));
             }
-
         }
     };
 
@@ -143,14 +196,56 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
 
     const handleCategory = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setCategoryParams((prevState) => ({ ...prevState, [name]: value }));
-        // Clear validation error if exists
-        if (errors[e.target.name]) {
-            setErrors((prev) => ({ ...prev, [e.target.name]: [] }));
+
+        // Create updated state with the new value
+        const updatedCategoryParams = {
+            ...categoryParams,
+            [name]: value
+        };
+
+        // Clear dependent fields when parent field changes
+        if (name === 'category') {
+            // Reset all dependent fields when category changes
+            updatedCategoryParams.division = '';
+            updatedCategoryParams.subject = '';
+            updatedCategoryParams.chapter = '';
+            updatedCategoryParams.universityName = '';
+            updatedCategoryParams.universityType = '';
+            updatedCategoryParams.unit = '';
+            updatedCategoryParams.jobType = '';
+            updatedCategoryParams.jobName = '';
+        } else if (name === 'division') {
+            // Reset subject and chapter when division changes
+            updatedCategoryParams.subject = '';
+            updatedCategoryParams.chapter = '';
+        } else if (name === 'subject') {
+            // Reset chapter when subject changes
+            updatedCategoryParams.chapter = '';
+        } else if (name === 'universityType') {
+            // Reset universityName and unit when universityType changes
+            updatedCategoryParams.universityName = '';
+            updatedCategoryParams.unit = '';
+            updatedCategoryParams.subject = '';
+        } else if (name === 'universityName') {
+            // Reset subject when universityName changes
+            updatedCategoryParams.subject = '';
+        } else if (name === 'jobType') {
+            // Reset jobName when jobType changes
+            updatedCategoryParams.jobName = '';
+            updatedCategoryParams.subject = '';
+        } else if (name === 'jobName') {
+            // Reset subject when jobName changes
+            updatedCategoryParams.subject = '';
         }
 
-    };
+        // Update state with the new values
+        setCategoryParams(updatedCategoryParams);
 
+        // Clear validation error if exists
+        if (errors[name]) {
+            setErrors((prev) => ({ ...prev, [name]: [] }));
+        }
+    };
 
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -240,9 +335,6 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
         setActiveSteps?.(prevStep => prevStep + 1);
     };
 
-    console.log('All Category Params:', categoryQueryParams);
-    console.log('Filtered category id:', categoryId);
-
     return (
         <>
             <Box sx={{ width: '100%', height: 'auto' }}>
@@ -287,25 +379,32 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                                 value={categoryParams.division}
                                             />
                                         </Grid>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="Subject*" />
-                                            <CustomAutoComplete
-                                                options={subjects || []}
-                                                name={`subject`}
-                                                handleInput={handleCategory}
-                                                value={categoryParams.subject}
-                                                required={true} />
-                                        </Grid>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="Chapter*" />
-                                            <CustomAutoComplete
-                                                options={chapters || []}
-                                                name={`chapter`}
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.chapter}
-                                            />
-                                        </Grid>
+                                        {categoryParams.division && (
+                                            <>
+                                                <Grid size={4}>
+                                                    <CustomLabel fieldName="Subject*" />
+                                                    <CustomAutoComplete
+                                                        options={subjects || []}
+                                                        name={`subject`}
+                                                        handleInput={handleCategory}
+                                                        value={categoryParams.subject}
+                                                        required={true}
+                                                    />
+                                                </Grid>
+                                                {categoryParams.subject && (
+                                                    <Grid size={4}>
+                                                        <CustomLabel fieldName="Chapter*" />
+                                                        <CustomAutoComplete
+                                                            options={chapters || []}
+                                                            name={`chapter`}
+                                                            handleInput={handleCategory}
+                                                            required={true}
+                                                            value={categoryParams.chapter}
+                                                        />
+                                                    </Grid>
+                                                )}
+                                            </>
+                                        )}
                                     </>)
                             }
                             {/* in case of admission */}
@@ -322,41 +421,46 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                                 value={categoryParams.universityType}
                                             />
                                         </Grid>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="University Name*" />
-                                            <CustomAutoComplete
-                                                options={universityNames || []}
-                                                name={`universityName`}
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.universityName}
-                                            />
-                                        </Grid>
-                                        {categoryParams.universityType === 'University' && (
-                                            <Grid size={4}>
-                                                <CustomLabel fieldName="Unit*" />
-                                                <CustomAutoComplete
-                                                    options={units || []}
-                                                    name="unit"
-                                                    handleInput={handleCategory}
-                                                    required={true}
-                                                    value={categoryParams.unit}
-                                                    error={!!errors.unit?.length}
-                                                    helperText={errors.unit?.join(' ')}
-                                                />
-                                            </Grid>
+                                        {categoryParams.universityType && (
+                                            <>
+                                                <Grid size={4}>
+                                                    <CustomLabel fieldName="University Name*" />
+                                                    <CustomAutoComplete
+                                                        options={universityNames || []}
+                                                        name={`universityName`}
+                                                        handleInput={handleCategory}
+                                                        required={true}
+                                                        value={categoryParams.universityName}
+                                                    />
+                                                </Grid>
+                                                {categoryParams.universityType === 'University' && (
+                                                    <Grid size={4}>
+                                                        <CustomLabel fieldName="Unit*" />
+                                                        <CustomAutoComplete
+                                                            options={units || []}
+                                                            name="unit"
+                                                            handleInput={handleCategory}
+                                                            required={true}
+                                                            value={categoryParams.unit}
+                                                            error={!!errors.unit?.length}
+                                                            helperText={errors.unit?.join(' ')}
+                                                        />
+                                                    </Grid>
+                                                )}
+                                                {categoryParams.universityName && (
+                                                    <Grid size={4}>
+                                                        <CustomLabel fieldName="Subject*" />
+                                                        <CustomAutoComplete
+                                                            options={subjects || []}
+                                                            name={`subject`}
+                                                            handleInput={handleCategory}
+                                                            required={true}
+                                                            value={categoryParams.subject}
+                                                        />
+                                                    </Grid>
+                                                )}
+                                            </>
                                         )}
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="Subject*" />
-                                            <CustomAutoComplete
-                                                options={subjects || []}
-                                                name={`subject`}
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.subject}
-                                            />
-                                        </Grid>
-
                                     </>)
                             }
                             {/* in case of job */}
@@ -375,48 +479,54 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                                 helperText={errors.jobType?.join(' ')}
                                             />
                                         </Grid>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="Job Name*" />
-                                            <CustomAutoComplete
-                                                options={jobNames || []}
-                                                name="jobName"
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.jobName}
-                                                error={!!errors.jobName?.length}
-                                                helperText={errors.jobName?.join(' ')}
-                                            />
-                                        </Grid>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="Subject*" />
-                                            <CustomAutoComplete
-                                                options={subjects || []}
-                                                name={`subject`}
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.subject}
-                                            />
-                                        </Grid>
+                                        {categoryParams.jobType && (
+                                            <>
+                                                <Grid size={4}>
+                                                    <CustomLabel fieldName="Job Name*" />
+                                                    <CustomAutoComplete
+                                                        options={jobNames || []}
+                                                        name="jobName"
+                                                        handleInput={handleCategory}
+                                                        required={true}
+                                                        value={categoryParams.jobName}
+                                                        error={!!errors.jobName?.length}
+                                                        helperText={errors.jobName?.join(' ')}
+                                                    />
+                                                </Grid>
+                                                {categoryParams.jobName && (
+                                                    <Grid size={4}>
+                                                        <CustomLabel fieldName="Subject*" />
+                                                        <CustomAutoComplete
+                                                            options={subjects || []}
+                                                            name={`subject`}
+                                                            handleInput={handleCategory}
+                                                            required={true}
+                                                            value={categoryParams.subject}
+                                                        />
+                                                    </Grid>
+                                                )}
+                                            </>
+                                        )}
                                     </>)
                             }
                             {/* cover image upload button */}
                             <Grid size={12}>
                                 <CustomLabel fieldName="Upload Cover Image*" />
                                 <Card variant="outlined"
-                                    sx={{ position: 'relative', height: '240px', mt: 0.8, px: 1.5, py: 0.8, borderRadius: 2 }}
+                                      sx={{ position: 'relative', height: '240px', mt: 0.8, px: 1.5, py: 0.8, borderRadius: 2 }}
                                 >
                                     <Box>
                                         <img alt="cover-photo"
-                                            src={tempCover || ''}
-                                            style={{ width: "100%", height: "100%", objectFit: 'cover', display: tempCover === '' ? 'none' : 'block' }}
+                                             src={tempCover || ''}
+                                             style={{ width: "100%", height: "100%", objectFit: 'cover', display: tempCover === '' ? 'none' : 'block' }}
                                         />
                                         {/* new image upload button */}
                                         <Button component="label"
-                                            size="small"
-                                            variant="text"
-                                            tabIndex={-1}
-                                            startIcon={<CloudUploadIcon />}
-                                            sx={{ position: 'absolute', top: "45%", left: '43%', color: "gray.700", borderRadius: "8px", cursor: "pointer", backgroundColor: tempCover ? "white" : 'transparent' }}
+                                                size="small"
+                                                variant="text"
+                                                tabIndex={-1}
+                                                startIcon={<CloudUploadIcon />}
+                                                sx={{ position: 'absolute', top: "45%", left: '43%', color: "gray.700", borderRadius: "8px", cursor: "pointer", backgroundColor: tempCover ? "white" : 'transparent' }}
                                         >
 
                                             {tempCover ? 'Change Cover Image' : 'Click to Upload'}

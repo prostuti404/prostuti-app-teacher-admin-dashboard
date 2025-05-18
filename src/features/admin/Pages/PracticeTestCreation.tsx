@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid2';
 import CustomLabel from "../../../shared/components/CustomLabel";
 import CustomTextField from "../../../shared/components/CustomTextField";
 import CustomAutoComplete from "../../../shared/components/CustomAutoComplete";
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAppDispatch } from "../../../redux/hooks";
 import {
     useGetAllCategoryTypesQuery,
@@ -73,7 +73,9 @@ const PracticeTestCreation = () => {
     // fetching units, job types and job names
     const { data: unitsData, isLoading: unitsLoading } = useGetUnitsQuery({});
     const { data: jobTypesData, isLoading: jobTypesLoading } = useGetJobTypesQuery({});
-    const { data: jobNamesData, isLoading: jobNamesLoading } = useGetJobNamesQuery({});
+    const { data: jobNamesData, isLoading: jobNamesLoading } = useGetJobNamesQuery(
+        categoryParams.jobType ? { jobType: categoryParams.jobType } : {}
+    );
     // calling the create category method from redux
     const [createCategory, { isLoading: creationLoader }] = useCreateCategoryMutation();
     const [createQuestionPattern, { isLoading: creationQuestionPatternLoader }] = useCreateQuestionPatternMutation();
@@ -88,16 +90,17 @@ const PracticeTestCreation = () => {
 
     // extracting divisions subjects, chapter, universityType, universityName, from the category data and creating unique array.
     const divisions = getUniqueStrings(categoryData?.data || [], 'division');
-    const subjects = getUniqueStrings(categoryData?.data || [], 'subject');
     const chapters = getUniqueStrings(categoryData?.data || [], 'chapter');
     const universityNames = getUniqueStrings(categoryData?.data || [], 'universityName');
     const universityTypes = getUniqueStrings(categoryData?.data || [], 'universityType');
 
     // Correctly extract units, jobTypes, and jobNames from API responses
-    // If the API returns an array of strings directly (e.g., ["A", "B", "C"])
-    const units = Array.isArray(unitsData?.data) ? unitsData.data : [];
+    const units = Array.isArray(unitsData?.data) ?
+        (typeof unitsData.data[0] === 'string' ?
+                unitsData.data :
+                getUniqueStrings(unitsData.data, 'unit')
+        ) : [];
 
-    // For job types and job names, handle both object format and array format
     const jobTypes = Array.isArray(jobTypesData?.data) ?
         (typeof jobTypesData.data[0] === 'string' ?
                 jobTypesData.data :
@@ -111,9 +114,9 @@ const PracticeTestCreation = () => {
         ) : [];
 
     // Filter subjects based on category, jobType, or universityType as appropriate
-    const filteredSubjects = React.useMemo(() => {
-        if (!categoryData?.data) return [];
+    let filteredSubjects = [];
 
+    if (categoryData?.data) {
         let filtered = [...categoryData.data];
 
         if (categoryParams.category === 'Academic' && categoryParams.division) {
@@ -134,8 +137,8 @@ const PracticeTestCreation = () => {
             }
         }
 
-        return getUniqueStrings(filtered, 'subject');
-    }, [categoryData?.data, categoryParams]);
+        filteredSubjects = getUniqueStrings(filtered, 'subject');
+    }
 
     // Get all category IDs from the categoryData
     const categoryIds = categoryData?.data?.map(category => category._id) || [];
