@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid2';
 import CustomLabel from "../../../shared/components/CustomLabel";
 import CustomTextField from "../../../shared/components/CustomTextField";
 import CustomAutoComplete from "../../../shared/components/CustomAutoComplete";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppDispatch } from "../../../redux/hooks";
 import {
     useGetAllCategoryTypesQuery,
@@ -78,7 +78,6 @@ const PracticeTestCreation = () => {
     const [createCategory, { isLoading: creationLoader }] = useCreateCategoryMutation();
     const [createQuestionPattern, { isLoading: creationQuestionPatternLoader }] = useCreateQuestionPatternMutation();
 
-
     // setting the data to local redux store
     const dispatch = useAppDispatch();
 
@@ -93,9 +92,50 @@ const PracticeTestCreation = () => {
     const chapters = getUniqueStrings(categoryData?.data || [], 'chapter');
     const universityNames = getUniqueStrings(categoryData?.data || [], 'universityName');
     const universityTypes = getUniqueStrings(categoryData?.data || [], 'universityType');
-    const units = getUniqueStrings(unitsData?.data || [], 'unit');
-    const jobTypes = getUniqueStrings(jobTypesData?.data || [], 'jobType');
-    const jobNames = getUniqueStrings(jobNamesData?.data || [], 'jobName');
+
+    // Correctly extract units, jobTypes, and jobNames from API responses
+    // If the API returns an array of strings directly (e.g., ["A", "B", "C"])
+    const units = Array.isArray(unitsData?.data) ? unitsData.data : [];
+
+    // For job types and job names, handle both object format and array format
+    const jobTypes = Array.isArray(jobTypesData?.data) ?
+        (typeof jobTypesData.data[0] === 'string' ?
+                jobTypesData.data :
+                getUniqueStrings(jobTypesData.data, 'jobType')
+        ) : [];
+
+    const jobNames = Array.isArray(jobNamesData?.data) ?
+        (typeof jobNamesData.data[0] === 'string' ?
+                jobNamesData.data :
+                getUniqueStrings(jobNamesData.data, 'jobName')
+        ) : [];
+
+    // Filter subjects based on category, jobType, or universityType as appropriate
+    const filteredSubjects = React.useMemo(() => {
+        if (!categoryData?.data) return [];
+
+        let filtered = [...categoryData.data];
+
+        if (categoryParams.category === 'Academic' && categoryParams.division) {
+            filtered = filtered.filter(item => item.division === categoryParams.division);
+        }
+        else if (categoryParams.category === 'Admission' && categoryParams.universityType) {
+            filtered = filtered.filter(item => item.universityType === categoryParams.universityType);
+
+            if (categoryParams.universityName) {
+                filtered = filtered.filter(item => item.universityName === categoryParams.universityName);
+            }
+        }
+        else if (categoryParams.category === 'Job' && categoryParams.jobType) {
+            filtered = filtered.filter(item => item.jobType === categoryParams.jobType);
+
+            if (categoryParams.jobName) {
+                filtered = filtered.filter(item => item.jobName === categoryParams.jobName);
+            }
+        }
+
+        return getUniqueStrings(filtered, 'subject');
+    }, [categoryData?.data, categoryParams]);
 
     // Get all category IDs from the categoryData
     const categoryIds = categoryData?.data?.map(category => category._id) || [];
@@ -145,6 +185,11 @@ const PracticeTestCreation = () => {
         } else if (name === 'jobType') {
             // Reset jobName when jobType changes
             updatedCategoryParams.jobName = '';
+            // Also reset subject when jobType changes
+            updatedCategoryParams.subject = '';
+        } else if (name === 'jobName') {
+            // Reset subject when jobName changes
+            updatedCategoryParams.subject = '';
         }
 
         // Update state with the new values
@@ -374,18 +419,20 @@ const PracticeTestCreation = () => {
                                                 helperText={errors.jobType?.join(' ')}
                                             />
                                         </Grid>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="Job Name*" />
-                                            <CustomAutoComplete
-                                                options={jobNames || []}
-                                                name="jobName"
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.jobName}
-                                                error={!!errors.jobName?.length}
-                                                helperText={errors.jobName?.join(' ')}
-                                            />
-                                        </Grid>
+                                        {categoryParams.jobType && (
+                                            <Grid size={4}>
+                                                <CustomLabel fieldName="Job Name*" />
+                                                <CustomAutoComplete
+                                                    options={jobNames || []}
+                                                    name="jobName"
+                                                    handleInput={handleCategory}
+                                                    required={true}
+                                                    value={categoryParams.jobName}
+                                                    error={!!errors.jobName?.length}
+                                                    helperText={errors.jobName?.join(' ')}
+                                                />
+                                            </Grid>
+                                        )}
                                     </>
                                 )}
 
@@ -425,7 +472,7 @@ const PracticeTestCreation = () => {
                                                 <Grid size={4}>
                                                     <CustomLabel fieldName="Subject*" />
                                                     <CustomAutoComplete
-                                                        options={subjects || []}
+                                                        options={filteredSubjects || []}
                                                         name="subject"
                                                         handleInput={(e) => handleSubjectSectionInput(index, e)}
                                                         required={true}
