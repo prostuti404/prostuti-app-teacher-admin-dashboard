@@ -1,0 +1,189 @@
+{
+  "success": true,
+  "message": "QuestionPatterns are retrieved successfully",
+  "data": {
+    "meta": {
+      "page": 1,
+      "limit": 10,
+      "count": 3
+    },
+    "data": [
+      {
+        "_id": "6828e53f92908437a07bef77",
+        "category_id": [
+          {
+            "lesson": "All",
+            "_id": "681b8d839f6522ca6d3d3381",
+            "type": "Academic",
+            "division": "Common",
+            "subject": "Bangladesh",
+            "chapter": "Bangladesh History",
+            "createdAt": "2025-05-07T16:42:43.827Z",
+            "updatedAt": "2025-05-07T16:42:43.827Z",
+            "__v": 0
+          },
+          {
+            "lesson": "All",
+            "_id": "6741bdc582bf38e485f98140",
+            "type": "Academic",
+            "division": "Common",
+            "subject": "Bangla",
+            "chapter": "Bangla 2nd Paper",
+            "createdAt": "2024-11-23T11:34:29.704Z",
+            "updatedAt": "2024-11-23T11:34:29.704Z",
+            "__v": 0
+          },
+          {
+            "lesson": "All",
+            "_id": "6741bd9882bf38e485f9813d",
+            "type": "Academic",
+            "division": "Common",
+            "subject": "Bangla",
+            "chapter": "Bangla 1st Paper",
+            "createdAt": "2024-11-23T11:33:44.115Z",
+            "updatedAt": "2024-11-23T11:33:44.115Z",
+            "__v": 0
+          }
+        ],
+        "time": 60,
+        "questionType": "MCQ",
+        "mainSubjects": [
+          {
+            "subject": "Bangladesh",
+            "questionCount": 25,
+            "_id": "6828e53f92908437a07bef78"
+          }
+        ],
+        "optionalSubjects": [
+          {
+            "subject": "Bangla",
+            "questionCount": 10,
+            "_id": "6828e53f92908437a07bef79"
+          }
+        ],
+        "createdBy": {
+          "_id": "6818f421b1e7c8843b8e84dd",
+          "user_id": "6818f421b1e7c8843b8e84db",
+          "adminId": "AID1746465825083tbdqu",
+          "email": "saif@gmail.com",
+          "createdAt": "2025-05-05T17:23:45.324Z",
+          "updatedAt": "2025-05-05T17:23:45.324Z"
+        },
+        "updatedBy": "6818f421b1e7c8843b8e84dd",
+        "createdAt": "2025-05-17T19:36:31.959Z",
+        "updatedAt": "2025-05-17T19:36:31.959Z",
+        "__v": 0
+      },
+      {
+        "_id": "68135ce4247028e9a2aa0efe",
+        "category_id": [
+          {
+            "lesson": "All",
+            "_id": "67c2f83877f41d22d59c6885",
+            "type": "Academic",
+            "division": "Science",
+            "subject": "Finance",
+            "chapter": "Finnace2",
+            "createdAt": "2025-03-01T12:06:16.512Z",
+            "updatedAt": "2025-04-05T09:57:48.578Z",
+            "__v": 0
+          },
+          {
+            "lesson": "All",
+            "_id": "67400efc82bf38e485f980e4",
+            "type": "Academic",
+            "division": "Science",
+            "subject": "Physics 1st Paper",
+            "chapter": "Introduction to Physics",
+            "createdAt": "2024-11-22T04:56:28.041Z",
+            "updatedAt": "2024-11-22T04:56:28.041Z",
+            "__v": 0
+          }
+        ],
+        "time": 120,
+        "questionType": "Written",
+        "mainSubjects": [
+          {
+            "subject": "Physics 1st Paper",
+            "questionCount": 2,
+            "_id": "68135ce4247028e9a2aa0eff"
+          }
+        ],
+        "optionalSubjects": [
+          {
+            "subject": "Finance",
+            "questionCount": 2,
+            "_id": "68135ce4247028e9a2aa0f00"
+          }
+        ],
+        "createdBy": {
+          "_id": "6719dea3c4b3154a4d1ff081",
+          "user_id": "6719dea3c4b3154a4d1ff07f",
+          "adminId": "AID1729748643253sm6gc",
+          "email": "admin1@gmail.com",
+          "createdAt": "2024-10-24T05:44:03.651Z",
+          "updatedAt": "2024-10-24T05:44:03.651Z"
+        },
+        "updatedBy": "6719dea3c4b3154a4d1ff081",
+        "createdAt": "2025-05-01T11:37:08.103Z",
+        "updatedAt": "2025-05-01T11:37:08.103Z",
+        "__v": 0
+      },
+      {
+        "_id": "68135cc5247028e9a2aa0eeb",
+        "category_id": [
+          {
+            "lesson": "All",
+            "_id": "67c2f83877f41d22d59c6885",
+            "type": "Academic",
+            "division": "Science",
+            "subject": "Finance",
+            "chapter": "Finnace2",
+            "createdAt": "2025-03-01T12:06:16.512Z",
+            "updatedAt": "2025-04-05T09:57:48.578Z",
+            "__v": 0
+          },
+          {
+            "lesson": "All",
+            "_id": "67400efc82bf38e485f980e4",
+            "type": "Academic",
+            "division": "Science",
+            "subject": "Physics 1st Paper",
+            "chapter": "Introduction to Physics",
+            "createdAt": "2024-11-22T04:56:28.041Z",
+            "updatedAt": "2024-11-22T04:56:28.041Z",
+            "__v": 0
+          }
+        ],
+        "time": 120,
+        "questionType": "MCQ",
+        "mainSubjects": [
+          {
+            "subject": "Physics 1st Paper",
+            "questionCount": 2,
+            "_id": "68135cc5247028e9a2aa0eec"
+          }
+        ],
+        "optionalSubjects": [
+          {
+            "subject": "Finance",
+            "questionCount": 2,
+            "_id": "68135cc5247028e9a2aa0eed"
+          }
+        ],
+        "createdBy": {
+          "_id": "6719dea3c4b3154a4d1ff081",
+          "user_id": "6719dea3c4b3154a4d1ff07f",
+          "adminId": "AID1729748643253sm6gc",
+          "email": "admin1@gmail.com",
+          "createdAt": "2024-10-24T05:44:03.651Z",
+          "updatedAt": "2024-10-24T05:44:03.651Z"
+        },
+        "updatedBy": "6719dea3c4b3154a4d1ff081",
+        "createdAt": "2025-05-01T11:36:37.230Z",
+        "updatedAt": "2025-05-01T11:36:37.230Z",
+        "__v": 0
+      }
+    ]
+  }
+}
