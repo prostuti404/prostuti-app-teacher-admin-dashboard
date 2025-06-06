@@ -106,7 +106,7 @@ const Profile = () => {
     console.log("fetched profile data", fetchedProfileData.data);
 
     // extracting teacher data from backend
-    const { teacherId, email, joinedDate, name, phone, subject, assignedWorks } = fetchedProfileData.data;
+    const { teacherId, email, joinedDate, name, phone, subject, assignedWorks } = fetchedProfileData?.data || [];
 
     // form data handler
     //^ handling non file form data

@@ -12,7 +12,7 @@ const RecentFlashcards = () => {
     return <Loader />;
   }
 
-  const flashcardData = flashCards.data.data || [];
+  const flashcardData = flashCards?.data?.data || [];
 
   return (
     <Box sx={{ flexGrow: 1 }}>

@@ -18,12 +18,15 @@ import { getUniqueStrings } from "../../../utils/typeSafeUniqueArrays";
 import Alert from '@mui/material/Alert';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {useCreateQuestionPatternMutation} from "../../../redux/features/questionPatternApi.ts";
+import { useCreateQuestionPatternMutation } from "../../../redux/features/questionPatternApi.ts";
+import { useNavigate } from "react-router-dom";
+import { ArrowBackIcon } from "../../teacher/Pages/Materials/Create Test/index.ts";
 
 const PracticeTestCreation = () => {
     const [errors, setErrors] = useState<{ [key: string]: string[]; }>({});
     const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
     const [errorMessages, setErrorMessages] = useState<string[]>([]);
+    const navigate = useNavigate();
 
     // test parameters state - time and questionType now
     const [testDetails, setTestDetails] = useState({
@@ -97,20 +100,20 @@ const PracticeTestCreation = () => {
     // Correctly extract units, jobTypes, and jobNames from API responses
     const units = Array.isArray(unitsData?.data) ?
         (typeof unitsData.data[0] === 'string' ?
-                unitsData.data :
-                getUniqueStrings(unitsData.data, 'unit')
+            unitsData.data :
+            getUniqueStrings(unitsData.data, 'unit')
         ) : [];
 
     const jobTypes = Array.isArray(jobTypesData?.data) ?
         (typeof jobTypesData.data[0] === 'string' ?
-                jobTypesData.data :
-                getUniqueStrings(jobTypesData.data, 'jobType')
+            jobTypesData.data :
+            getUniqueStrings(jobTypesData.data, 'jobType')
         ) : [];
 
     const jobNames = Array.isArray(jobNamesData?.data) ?
         (typeof jobNamesData.data[0] === 'string' ?
-                jobNamesData.data :
-                getUniqueStrings(jobNamesData.data, 'jobName')
+            jobNamesData.data :
+            getUniqueStrings(jobNamesData.data, 'jobName')
         ) : [];
 
     // Filter subjects based on category, jobType, or universityType as appropriate
@@ -333,7 +336,13 @@ const PracticeTestCreation = () => {
     return (
         <>
             <Box component='section' sx={{ mt: 3 }}>
-                <Typography variant="h5" sx={{ mb: 3 }}>Set New Test</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <Button variant="outlined" onClick={() => navigate(-1)} startIcon={<ArrowBackIcon />} sx={{ mr: 2 }}>
+                        Back
+                    </Button>
+                    <Typography variant="h4" sx={{ fontWeight: "bold", color: "#3F3F46" }}>Set New Test</Typography>
+                </Box>
+
                 <Box sx={{ width: '100%', height: 'auto' }}>
                     <Paper variant="outlined" sx={{ width: '100%', height: 'auto', borderRadius: '10px', p: 3 }}>
                         <form onSubmit={handleSubmit}>
