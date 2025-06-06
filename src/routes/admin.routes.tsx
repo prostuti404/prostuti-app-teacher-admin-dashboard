@@ -28,6 +28,7 @@ import Routine from "../features/teacher/Pages/Materials/Routine";
 import FlashCard from "../features/teacher/Pages/Flashcard/FlashCard";
 import ChildFlashCards from "../features/teacher/Pages/Flashcard/ChildFlashCards";
 import PracticeTestCreation from "../features/admin/Pages/PracticeTestCreation.tsx";
+import SingleQuestionPattern from "../features/admin/Pages/SingleQuestionPattern.tsx";
 
 export const adminRoutes = [
   {
@@ -129,6 +130,10 @@ export const adminRoutes = [
   {
     path: "practice-test",
     element: <PracticeTest />,
+  },
+  {
+    path: "practice-test/:qpId",
+    element: <SingleQuestionPattern />,
   },
   {
     path: "payment-management",

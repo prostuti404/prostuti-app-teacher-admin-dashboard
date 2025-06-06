@@ -1,6 +1,7 @@
 // src/pages/admin/PracticeTest/QuestionPatternTable.tsx
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Button } from '@mui/material';
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface QuestionPatternTableProps {
     rows: any[];
@@ -23,24 +24,42 @@ const QuestionPatternTable = ({
     rowsPerPageDefault = 25,
     maxRows
 }: QuestionPatternTableProps) => {
+    const navigate = useNavigate();
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageDefault);
 
+    console.log(rows);
     // Flatten the patterns
-    const flattenedRows = rows.flatMap((pattern) =>
-        (pattern.category_id || []).map((cat: any) => ({
-            key: `${pattern._id}_${cat._id}`,
+    // const flattenedRows = rows.flatMap((pattern) =>
+    //     (pattern.category_id || []).map((cat: any) => ({
+    //         id: pattern._id,
+    //         key: `${pattern._id}_${cat._id}`,
+    //         category: pattern.questionType,
+    //         division: cat.division,
+    //         type: cat.type,
+    //         subject: cat.subject,
+    //     }))
+    // );
+    // Group by pattern ID and aggregate subjects
+    const groupedRows = rows.map(pattern => {
+        const subjects = pattern.category_id.map((cat: any) => cat.subject).join(', ');
+        const firstCat = pattern.category_id[0]; // use the first category for other values
+
+        return {
+            id: pattern._id,
             category: pattern.questionType,
-            division: cat.division,
-            type: cat.type,
-            subject: cat.subject,
-        }))
-    );
+            division: firstCat?.division || '',
+            type: firstCat?.type || '',
+            subject: subjects,
+        };
+    });
+
+    console.log(groupedRows);
 
     // For non-paginated (overview) version, only show maxRows items
     const dataToShow = paginated
-        ? flattenedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-        : flattenedRows.slice(0, maxRows);
+        ? groupedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+        : groupedRows.slice(0, maxRows);
 
     return (
         <Paper variant="outlined" sx={{ width: '100%', overflow: 'hidden', borderRadius: '10px' }}>
@@ -57,22 +76,25 @@ const QuestionPatternTable = ({
                     </TableHead>
                     <TableBody>
                         {dataToShow.map((row) => (
-                            <TableRow hover key={row.key}>
+                            <TableRow hover key={row.id}>
                                 <TableCell>{row.category}</TableCell>
                                 <TableCell>{row.division}</TableCell>
                                 <TableCell>{row.type}</TableCell>
                                 <TableCell>{row.subject}</TableCell>
                                 <TableCell>
-                                    <Button
-                                        variant="contained"
-                                        size="small"
-                                        onClick={() => {
-                                            // Implement your action here, e.g., navigation or modal
-                                            alert(`You clicked on ${row.subject}`);
-                                        }}
-                                    >
-                                        View
-                                    </Button>
+                                    <Link to={`/admin/practice-test/${row.id}`} style={{ textDecoration: 'none' }}>
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                        // onClick={() => {
+                                        //     // Implement your action here, e.g., navigation or modal
+                                        //     alert(`You clicked on ${row.subject}`);
+                                        // }}
+                                        >
+                                            View
+                                        </Button>
+                                    </Link>
+
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -82,7 +104,7 @@ const QuestionPatternTable = ({
             {paginated && (
                 <TablePagination
                     rowsPerPageOptions={[25, 50, 100]}
-                    count={flattenedRows.length}
+                    count={groupedRows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={(_, newPage) => setPage(newPage)}

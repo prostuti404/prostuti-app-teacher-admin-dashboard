@@ -10,9 +10,21 @@ export const practiceTestApi = baseApi.injectEndpoints({
             }),
             providesTags: ["QuestionPatterns"],
         }),
-
-
+        getQuestionPatternById: builder.query<any, string>({
+            query: (id) => ({
+                url: `/question-pattern/single-question-pattern/${id}`,
+                method: "GET",
+            }),
+            providesTags: (result, error, id) => [{ type: "QuestionPatterns", id }],
+        }),
+        deleteQuestionPattern: builder.mutation({
+            query: (id) => ({
+                url: `/question-pattern/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["QuestionPatterns"],
+        })
     }),
 });
 
-export const { useGetAllQuestionPatternsQuery } = practiceTestApi;
+export const { useGetAllQuestionPatternsQuery, useGetQuestionPatternByIdQuery, useDeleteQuestionPatternMutation } = practiceTestApi;
