@@ -63,11 +63,11 @@ const adminDashboardMenus = [
     name: 'Coupon Management',
     icon: <PaymentManagement />,
   },
-  {
-    path: '/admin/revenue-management',
-    name: 'Revenue Management',
-    icon: <RevenueManagementIcon />,
-  },
+  // {
+  //   path: '/admin/revenue-management',
+  //   name: 'Revenue Management',
+  //   icon: <RevenueManagementIcon />,
+  // },
   {
     path: '/admin/category',
     name: 'Category',
