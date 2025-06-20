@@ -68,8 +68,21 @@ const AddCategoryForm = () => {
   const universityTypeValue = watch("universityType");
 
   const onSubmit = async (data: CreateCategoryInput) => {
+    const trimmedData = {
+      ...data,
+      subject: data.subject?.trim(),
+      chapter: data.chapter?.trim(),
+      universityName: data.universityName?.trim(),
+      universityType: data.universityType?.trim(),
+      unit: data.unit?.trim(),
+      lesson: data.lesson?.trim(),
+      jobType: data.jobType?.trim(),
+      jobName: data.jobName?.trim(),
+
+    };
+
     const cleanedData = Object.fromEntries(
-        Object.entries(data).filter(([key, value]) => value !== "")
+        Object.entries(trimmedData).filter(([key, value]) => value !== "")
     );
     await createCategory(cleanedData);
     reset();
