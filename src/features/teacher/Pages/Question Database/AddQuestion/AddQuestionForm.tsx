@@ -48,7 +48,39 @@ const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImag
     // question type selection
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setQuestion((prevState) => ({ ...prevState, [name]: value }));
+        setQuestion((prevState) => {
+            const newState = { ...prevState, [name]: value };
+            if (name === 'category') {
+                // Clear dependent dropdowns
+                delete newState.division;
+                delete newState.subject;
+                delete newState.chapter;
+                delete newState.universityName;
+                delete newState.universityType;
+                delete newState.unit;
+                delete newState.jobType;
+                delete newState.jobName;
+            } else if (name === 'division') {
+                delete newState.subject;
+                delete newState.chapter;
+            } else if (name === 'subject') {
+                delete newState.chapter;
+            } else if (name === 'universityType') {
+                delete newState.universityName;
+                delete newState.unit;
+                delete newState.subject;
+            } else if (name === 'universityName') {
+                delete newState.unit;
+                delete newState.subject;
+            } else if (name === 'jobType') {
+                delete newState.jobName;
+                delete newState.subject;
+            } else if (name === 'jobName') {
+                delete newState.subject;
+            }
+
+            return newState;
+        });
         setCategory_id(categoryId);
     };
 
@@ -138,19 +170,12 @@ const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImag
 
             {/* choosing the question category field */}
             {index === 0 &&
-                (<Grid size={6}>
+                <Grid size={6}>
                     <CustomLabel fieldName="Category" />
                     <FormControl fullWidth>
                         <TextField
                             name={`category`}
-                            // value={age}
-                            onChange={(e) => {
-                                setQuestion({});
-                                setQuestion((prevState) => ({
-                                    ...prevState,
-                                    [`category`]: e.target.value,
-                                }));
-                            }}
+                            onChange={handleInput}
                             size="small"
                             select
                             required={true}
@@ -173,7 +198,7 @@ const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImag
                             }
                         </TextField>
                     </FormControl>
-                </Grid >)
+                </Grid>
             }
             {/* question type selection */}
             <Grid size={index === 0 ? 6 : 12}>
