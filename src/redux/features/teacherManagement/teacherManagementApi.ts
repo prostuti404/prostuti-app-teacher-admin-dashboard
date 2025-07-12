@@ -34,7 +34,7 @@ const teacherManagementAPI = baseApi.injectEndpoints({
     // Get All Category Subjects
     getAllCategorySubjects: builder.query({
       query: () => ({
-        url: "/category/subject",
+        url: "/category/subject?limit=0",
         method: "GET",
       }),
       providesTags: ["Subjects"],
