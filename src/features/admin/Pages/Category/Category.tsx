@@ -37,7 +37,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 const Category = () => {
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(0);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
