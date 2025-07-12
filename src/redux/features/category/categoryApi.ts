@@ -5,7 +5,7 @@ const categoryApi = baseApi.injectEndpoints({
         getAllCategoryTypes: builder.query({
             query: () => {
                 return {
-                    url: '/category/type',
+                    url: '/category/type?limit=0',
                     method: 'GET',
                 };
             },
@@ -14,7 +14,7 @@ const categoryApi = baseApi.injectEndpoints({
         getUnits: builder.query({
             query: () => {
                 return {
-                    url: '/category/unit',
+                    url: '/category/unit?limit=0',
                     method: 'GET',
                 };
             },
@@ -23,7 +23,7 @@ const categoryApi = baseApi.injectEndpoints({
         getJobTypes: builder.query({
             query: () => {
                 return {
-                    url: '/category/job-type',
+                    url: '/category/job-type?limit=0',
                     method: 'GET',
                 };
             },
@@ -32,7 +32,7 @@ const categoryApi = baseApi.injectEndpoints({
         getJobNames: builder.query({
             query: () => {
                 return {
-                    url: '/category/job-name',
+                    url: '/category/job-name?limit=0',
                     method: 'GET',
                 };
             },
