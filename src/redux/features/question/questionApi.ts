@@ -30,7 +30,7 @@ const questionAPI = baseApi.injectEndpoints({
                     ...(questionObj.jobName && { jobName: questionObj.jobName }),
                 };
 
-                let URL = '/category';
+                let URL = '/category?limit=0';
                 // console.log('from questionAPI', queryParams);
 
 

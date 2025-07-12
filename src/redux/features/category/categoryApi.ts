@@ -50,7 +50,7 @@ const categoryApi = baseApi.injectEndpoints({
         getAllCategories: builder.query({
             query: ({ page = 1, limit = 0 }) => {
                 return {
-                    url: `/category?page=${page}&limit=${limit}`,
+                    url: `/category?limit=0`,
                     method: 'GET',
                 };
             },
