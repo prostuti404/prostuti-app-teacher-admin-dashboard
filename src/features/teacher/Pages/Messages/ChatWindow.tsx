@@ -33,6 +33,7 @@ const ChatWindow = ({ conversationId }: ChatWindowProps) => {
     const conversations = useAppSelector(state => state.chat.conversations);
     const typingStatus = useAppSelector(state => state.chat.typingUsers[conversationId] || false);
 
+
     // Find the current conversation
     const currentConversation = conversations.find(conv => conv.conversation_id === conversationId);
     const RESOLVED_MESSAGE = "Your doubt is solved. Thank you";
@@ -282,7 +283,7 @@ const ChatWindow = ({ conversationId }: ChatWindowProps) => {
                             {currentConversation.participant.name}
                         </Typography>
                         <Typography variant="body2" color="textSecondary">
-                            {currentConversation.subject}
+                            {currentConversation.message}
                         </Typography>
                     </Box>
                 </Box>
