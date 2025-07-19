@@ -61,7 +61,14 @@ export const chatSlice = createSlice({
         },
         clearUnreadCount: (state, action: PayloadAction<string>) => {
             state.unreadCounts[action.payload] = 0;
-        }
+        },
+        markConversationAsResolved: (state, action: PayloadAction<string>) => {
+            const conversationId = action.payload;
+            const conversation = state.conversations.find(c => c.conversation_id === conversationId);
+            if (conversation) {
+                conversation.isResolved = true;
+            }
+        },
     },
 });
 
@@ -76,6 +83,7 @@ export const {
     setTypingStatus,
     setUnreadCounts,
     clearUnreadCount,
+    markConversationAsResolved
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

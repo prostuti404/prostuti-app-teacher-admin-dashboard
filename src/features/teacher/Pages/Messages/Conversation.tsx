@@ -1,4 +1,4 @@
-import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Box, Badge } from '@mui/material';
+import {List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Box, Badge, Chip} from '@mui/material';
 import { useAppSelector, useAppDispatch } from '../../../../redux/hooks';
 import { formatDistanceToNow } from 'date-fns';
 import { setActiveConversation } from '../../../../redux/features/chat/chatSlice';
@@ -13,7 +13,7 @@ const Conversations = () => {
     const handleSelectConversation = (conversationId: string) => {
         dispatch(setActiveConversation(conversationId));
     };
-
+    const RESOLVED_MESSAGE = "Your doubt is solved. Thank you";
     // Format time for display
     const formatTime = (dateString: string) => {
         try {
@@ -46,6 +46,7 @@ const Conversations = () => {
                     {conversations.map((conversation) => {
                         const unreadCount = unreadCounts[conversation.conversation_id] || 0;
                         const isActive = activeConversationId === conversation.conversation_id;
+                        const isResolved = conversation.lastMessage.message === RESOLVED_MESSAGE;
 
                         return (
                             <ListItem
@@ -56,7 +57,7 @@ const Conversations = () => {
                                 sx={{
                                     p: 2,
                                     cursor: 'pointer',
-                                    backgroundColor: isActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                                    backgroundColor: isResolved ? '#FFFFFF' : (isActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent'),
                                     '&:hover': {
                                         backgroundColor: 'rgba(0, 0, 0, 0.04)'
                                     }
@@ -74,6 +75,7 @@ const Conversations = () => {
                                 </ListItemAvatar>
                                 <ListItemText
                                     primary={
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <Typography
                                             component="span"
                                             variant="subtitle1"
@@ -81,6 +83,10 @@ const Conversations = () => {
                                         >
                                             {conversation.participant.name}
                                         </Typography>
+                                            {isResolved && (
+                                                <Chip label="Resolved" size="small" />
+                                            )}
+                                        </Box>
                                     }
                                     secondary={
                                         <>

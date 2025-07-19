@@ -47,6 +47,7 @@ export interface IConversation {
         // Other participant details
     };
     lastMessage?: IChatMessage;
+    isResolved?: boolean;
 }
 
 // Unread message count
