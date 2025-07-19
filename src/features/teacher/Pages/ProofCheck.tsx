@@ -155,27 +155,29 @@ const ProofCheck = () => {
                         ) : (
                             paginatedQuestions.map((question, index: number) => (
                                 <Grid container spacing={2} key={question._id} sx={{position: 'relative', mb: 2}}>
-                                    <Box sx={{position: 'absolute', right: 16, top: 16, display: 'flex', gap: 1}}>
-                                        <Button
-                                            onClick={() => handleReview(question._id, true)}
-                                            variant="contained"
-                                            size="small"
-                                            color="primary"
-                                        >
-                                            Approve
-                                        </Button>
-                                        <Button
-                                            onClick={() => handleReview(question._id, false)}
-                                            variant="contained"
-                                            size="small"
-                                            color="error"
-                                        >
-                                            Reject
-                                        </Button>
-                                    </Box>
-
+                                    {/* This entire Grid container block is the corrected version */}
                                     <Grid size={12}>
-                                        <CustomLabel fieldName={`Question-${index + 1}`}/>
+                                        <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1}}>
+                                            <CustomLabel fieldName={`Question-${index + 1}`}/>
+                                            <Box sx={{display: 'flex', gap: 1}}>
+                                                <Button
+                                                    onClick={() => handleReview(question._id, true)}
+                                                    variant="contained"
+                                                    size="small"
+                                                    color="primary"
+                                                >
+                                                    Approve
+                                                </Button>
+                                                <Button
+                                                    onClick={() => handleReview(question._id, false)}
+                                                    variant="contained"
+                                                    size="small"
+                                                    color="error"
+                                                >
+                                                    Reject
+                                                </Button>
+                                            </Box>
+                                        </Box>
                                         <CustomTextField
                                             name={'question'}
                                             disabled
