@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../../../redux/hooks';
 import { setActiveConversation, setConversations, setPendingBroadcasts, setUnreadCounts } from '../../../../redux/features/chat/chatSlice';
 import { useSocket } from '../../../../shared/hooks/useSocket';
 import Loader from '../../../../shared/components/Loader';
+import {useGetTeacherProfileQuery} from "../../../../redux/features/teacher/teacherApi.ts";
 
 const Messages = () => {
     // Tab state
@@ -89,6 +90,20 @@ const Messages = () => {
     const pendingBroadcastsCount = broadcastData?.data?.length || 0;
     const unreadMessagesCount = unreadData?.data?.total || 0;
 
+    const { pendingBroadcasts } = useAppSelector((state) => state.chat);
+
+    // Fetch the teacher's profile to get their subject
+    const { data: teacherProfile } = useGetTeacherProfileQuery({});
+
+    // Filter the broadcasts to get the correct count
+    const filteredBroadcasts = pendingBroadcasts.filter(broadcast => {
+        if (teacherProfile?.data?.subject && broadcast.subject) {
+            return teacherProfile.data.subject.toLowerCase() === broadcast.subject.toLowerCase();
+        }
+        return false;
+    });
+
+
     // Show loader while data is loading
     if (broadcastsLoading || conversationsLoading || unreadLoading) {
         return <Loader />;
@@ -151,7 +166,7 @@ const Messages = () => {
                             />
                             <Tab
                                 label={
-                                    <Badge badgeContent={pendingBroadcastsCount} color="primary">
+                                    <Badge badgeContent={filteredBroadcasts.length} color="primary">
                                         <Typography>Requests</Typography>
                                     </Badge>
                                 }

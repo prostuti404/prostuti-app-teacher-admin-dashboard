@@ -6,6 +6,7 @@ import { useAcceptBroadcastMutation, useDeclineBroadcastMutation } from '../../.
 import { setActiveConversation, removePendingBroadcast } from '../../../../redux/features/chat/chatSlice';
 import useSocket from '../../../../shared/hooks/useSocket';
 import { IBroadcastRequest } from '../../../../types/chat.types';
+import {useGetTeacherProfileQuery} from "../../../../redux/features/teacher/teacherApi.ts";
 
 const BroadcastRequests = () => {
     const pendingBroadcasts = useAppSelector(state => state.chat.pendingBroadcasts);
@@ -15,11 +16,20 @@ const BroadcastRequests = () => {
     // API mutations
     const [acceptBroadcast] = useAcceptBroadcastMutation();
     const [declineBroadcast] = useDeclineBroadcastMutation();
+    const { data: teacherProfile } = useGetTeacherProfileQuery({});
 
     // State for confirmation dialog
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedBroadcast, setSelectedBroadcast] = useState<IBroadcastRequest | null>(null);
     const [actionType, setActionType] = useState<'accept' | 'decline'>('accept');
+
+    const filteredBroadcasts = pendingBroadcasts.filter(broadcast => {
+        if (teacherProfile?.data?.subject && broadcast.subject) {
+            return teacherProfile.data.subject.toLowerCase() === broadcast.subject.toLowerCase();
+        }
+        return false;
+    });
+
 
     // Handle accepting a broadcast request
     const handleAccept = async (broadcast: IBroadcastRequest) => {
@@ -97,13 +107,13 @@ const BroadcastRequests = () => {
 
     return (
         <>
-            {pendingBroadcasts.length === 0 ? (
+            {filteredBroadcasts.length === 0 ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                     <Typography color="textSecondary">No pending requests</Typography>
                 </Box>
             ) : (
                 <List sx={{ width: '100%', p: 0 }}>
-                    {pendingBroadcasts.map((broadcast) => (
+                    {filteredBroadcasts.map((broadcast) => (
                         <ListItem
                             key={broadcast._id}
                             alignItems="flex-start"
