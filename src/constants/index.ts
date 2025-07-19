@@ -3,4 +3,5 @@ export const teacherAssignedWorks = [
   "Questions",
   "Course",
   "Messages",
+  "proof_check"
 ];

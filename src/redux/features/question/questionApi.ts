@@ -1,4 +1,4 @@
-import { baseApi } from "../../api/baseApi";
+import {baseApi} from "../../api/baseApi";
 
 interface IQueryParams {
     type?: string;
@@ -19,15 +19,15 @@ const questionAPI = baseApi.injectEndpoints({
                 // filters: type: questionObj.category_0, division,subject, chapter
                 // console.log('coming from the questionAPI', questionObj);
                 const queryParams: IQueryParams = {
-                    ...(questionObj.category && { type: questionObj.category }),
-                    ...(questionObj.division && { division: questionObj.division }),
-                    ...(questionObj.subject && { subject: questionObj.subject }),
-                    ...(questionObj.chapter && { chapter: questionObj.chapter }),
-                    ...(questionObj.universityType && { universityType: questionObj.universityType }),
-                    ...(questionObj.universityName && { universityName: questionObj.universityName }),
-                    ...(questionObj.unit && { unit: questionObj.unit }),
-                    ...(questionObj.jobType && { jobType: questionObj.jobType }),
-                    ...(questionObj.jobName && { jobName: questionObj.jobName }),
+                    ...(questionObj.category && {type: questionObj.category}),
+                    ...(questionObj.division && {division: questionObj.division}),
+                    ...(questionObj.subject && {subject: questionObj.subject}),
+                    ...(questionObj.chapter && {chapter: questionObj.chapter}),
+                    ...(questionObj.universityType && {universityType: questionObj.universityType}),
+                    ...(questionObj.universityName && {universityName: questionObj.universityName}),
+                    ...(questionObj.unit && {unit: questionObj.unit}),
+                    ...(questionObj.jobType && {jobType: questionObj.jobType}),
+                    ...(questionObj.jobName && {jobName: questionObj.jobName}),
                 };
 
                 let URL = '/category?limit=0';
@@ -60,7 +60,7 @@ const questionAPI = baseApi.injectEndpoints({
         // academic questions
         getAllAcademicQuestions: builder.query({
             query: (filters) => {
-                let URL = `/question?categoryType=Academic&limit=0`;
+                let URL = `/question?categoryType=Academic&limit=0&status=APPROVED`;
                 if (Object.keys(filters).length !== 0) {
                     URL = Object.entries(filters).reduce((acc, [key, value]) => {
                         const prefix = '&';
@@ -78,7 +78,7 @@ const questionAPI = baseApi.injectEndpoints({
         // job questions
         getAllJobQuestions: builder.query({
             query: (filters) => {
-                let URL = `/question?categoryType=Job&limit=0`;
+                let URL = `/question?categoryType=Job&limit=0&status=APPROVED`;
                 if (Object.keys(filters).length !== 0) {
                     URL = Object.entries(filters).reduce((acc, [key, value]) => {
                         const prefix = '&';
@@ -95,7 +95,7 @@ const questionAPI = baseApi.injectEndpoints({
         // admission questions
         getAllAdmissionQuestions: builder.query({
             query: (filters) => {
-                let URL = `/question?categoryType=Admission&limit=0`;
+                let URL = `/question?categoryType=Admission&limit=0&status=APPROVED`;
                 if (Object.keys(filters).length !== 0) {
                     URL = Object.entries(filters).reduce((acc, [key, value]) => {
                         const prefix = '&';
@@ -112,7 +112,7 @@ const questionAPI = baseApi.injectEndpoints({
         }),
         getAllQuestions: builder.query({
             query: (filters) => {
-                let URL = `/question`;
+                let URL = `/question?status=APPROVED`;
                 console.log('filters sent to redux:', filters);
                 if (Object.keys(filters).length !== 0) {
                     URL = Object.entries(filters).reduce((acc, [key, value], index) => {
@@ -127,6 +127,23 @@ const questionAPI = baseApi.injectEndpoints({
             },
             providesTags: ['Questions']
         }),
+        getAllApprovedQuestions: builder.query({
+            query: (filters) => {
+                let URL = `/question?status=NOT_REVIEWED&limit=25`;
+                if (Object.keys(filters).length !== 0) {
+                    URL = Object.entries(filters).reduce((acc, [key, value]) => {
+                        const prefix = '&';
+                        return `${acc}${prefix}${key}=${value}`;
+                    }, URL);
+                }
+                console.log('URL from approved questionAPI', URL);
+                return {
+                    url: URL,
+                    method: 'GET'
+                };
+            },
+            providesTags: ['Questions']
+        }),
         deleteQuestion: builder.mutation({
             query: (id) => {
                 return {
@@ -135,8 +152,26 @@ const questionAPI = baseApi.injectEndpoints({
                 };
             },
             invalidatesTags: ['Questions']
-        })
+        }),
+        reviewQuestion: builder.mutation({
+            query: ({ id, body }) => ({
+                url: `/question/${id}/review`,
+                method: 'PATCH',
+                body,
+            }),
+            invalidatesTags: ['Questions'],
+        }),
     })
 });
 
-export const { useGetCategoryQuery, useCreateQuestionMutation, useGetAllAcademicQuestionsQuery, useGetAllQuestionsQuery, useDeleteQuestionMutation, useGetAllJobQuestionsQuery, useGetAllAdmissionQuestionsQuery } = questionAPI;
+export const {
+    useGetCategoryQuery,
+    useCreateQuestionMutation,
+    useGetAllAcademicQuestionsQuery,
+    useGetAllQuestionsQuery,
+    useDeleteQuestionMutation,
+    useGetAllJobQuestionsQuery,
+    useGetAllAdmissionQuestionsQuery,
+    useGetAllApprovedQuestionsQuery,
+    useReviewQuestionMutation
+} = questionAPI;

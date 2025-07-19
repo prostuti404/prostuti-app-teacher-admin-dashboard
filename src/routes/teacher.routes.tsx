@@ -34,6 +34,7 @@ import Routine from "../features/teacher/Pages/Materials/Routine";
 import EditLesson from "../features/teacher/Pages/Course/EditLesson";
 import StudentPerformanceList from "../features/teacher/Pages/Materials/StudentPerformance/StudentPerformanceList";
 import SingleStudentPerformance from "../features/teacher/Pages/Materials/StudentPerformance/SingleStudentPerformance";
+import ProofCheck from "../features/teacher/Pages/ProofCheck.tsx";
 
 export const teacherRoutes = [
   {
@@ -220,5 +221,9 @@ export const teacherRoutes = [
   {
     path: "notice",
     element: <NoticeCreation />,
+  },
+  {
+    path: "proof-check",
+    element: <ProofCheck />,
   },
 ];
