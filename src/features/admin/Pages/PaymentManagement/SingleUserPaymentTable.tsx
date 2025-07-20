@@ -38,35 +38,35 @@ const SingleUserPaymentTable = ({ student_id }: { student_id: string }) => {
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>SI</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Payment Invoice</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Transaction ID</TableCell>
 
               <TableCell sx={{ fontWeight: "bold" }}>Amount</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Paid Amount</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Action</TableCell>
+              {/*<TableCell sx={{ fontWeight: "bold" }}>Action</TableCell>*/}
             </TableRow>
           </TableHead>
           <TableBody>
   {payments?.map((payment, index) => (
     <TableRow key={payment._id}>
       <TableCell sx={{ py: 2 }}>{index + 1}</TableCell>
-      <TableCell sx={{ py: 2 }}>Invoice#{payment.transactionId}</TableCell>
+      <TableCell sx={{ py: 2 }}>{payment.transactionId}</TableCell>
       <TableCell sx={{ py: 2 }}>{payment?.amount}</TableCell>
       <TableCell sx={{ py: 2 }}>{payment?.amount}</TableCell>
 
-      <TableCell
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          color: "blue",
-          textDecoration: "underline",
-          cursor: "pointer",
-          "&:hover": { color: "darkblue" },
-          py: 2, // Add vertical padding to create spacing
-        }}
-      >
-        <DownloadIcon sx={{ color: "inherit", marginRight: 0.5 }} />
-        Download
-      </TableCell>
+      {/*<TableCell*/}
+      {/*  sx={{*/}
+      {/*    display: "flex",*/}
+      {/*    alignItems: "center",*/}
+      {/*    color: "blue",*/}
+      {/*    textDecoration: "underline",*/}
+      {/*    cursor: "pointer",*/}
+      {/*    "&:hover": { color: "darkblue" },*/}
+      {/*    py: 2, // Add vertical padding to create spacing*/}
+      {/*  }}*/}
+      {/*>*/}
+      {/*  <DownloadIcon sx={{ color: "inherit", marginRight: 0.5 }} />*/}
+      {/*  Download*/}
+      {/*</TableCell>*/}
     </TableRow>
   ))}
 </TableBody>
