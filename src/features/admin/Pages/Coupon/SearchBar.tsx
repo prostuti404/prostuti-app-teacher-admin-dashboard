@@ -43,7 +43,7 @@ const SearchBar: FC<ISearch> = ({ searchTerm, setSearchTerm }) => {
           placeholder="Search for coupon....."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e?.target?.value)}
-          inputProps={{ 'aria-label': 'search for coupon' }}
+          inputProps={{ 'aria-label': 'search cupon code' }}
         />
 
         {/* <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" /> */}
@@ -51,13 +51,13 @@ const SearchBar: FC<ISearch> = ({ searchTerm, setSearchTerm }) => {
 
       </Paper>
       <Button
-        startIcon={<Tune />}
+        startIcon={<Search />}
         sx={{
           mx: 1,
           textTransform: 'none',
         }}
       >
-        Filter
+        Search
       </Button>
     </Box>
   );
