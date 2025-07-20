@@ -54,6 +54,7 @@ const Category = () => {
     jobName: ""
   });
   const [originalValues, setOriginalValues] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Track university type for conditionally showing unit field
   const [showUnitField, setShowUnitField] = useState(false);
@@ -244,6 +245,14 @@ const Category = () => {
             </Link>
           </Box>
 
+          <TextField
+              label="Search by Subject"
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{ width: "100%", mb: 2 }}
+          />
+
           <Box component="section" sx={{ mt: 3, flexGrow: 1 }}>
             {isLoading || isFetching ? (
                 <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
@@ -261,7 +270,10 @@ const Category = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {categoriesData?.data?.map((category) => (
+                        {categoriesData?.data ?.filter((category) =>
+                            category.subject.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                            .map((category) => (
                             <TableRow
                                 key={category._id}
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
