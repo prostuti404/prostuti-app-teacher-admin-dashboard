@@ -5,6 +5,7 @@ import { teacherRoutes } from './teacher.routes';
 import Login from '../shared/components/Login';
 import ProtectedRoute from '../shared/components/layout/ProtectedRoute';
 import { NavigationProvider } from '../lib/Providers/NavigationProvider';
+import PrivacyPolicy from "../features/PrivacyPolicy.tsx";
 
 
 const router = createBrowserRouter([
@@ -34,7 +35,10 @@ const router = createBrowserRouter([
         ),
         children: adminRoutes
     },
-
+    {
+        path: '/privacy-policy', // Add this new route
+        element: <PrivacyPolicy />,
+    },
 ]);
 
 export default router;
