@@ -1,11 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Avatar, Divider, Paper } from '@mui/material';
+import {Box, Typography, TextField, IconButton, Avatar, Divider, Paper, Button} from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { useGetChatHistoryQuery, useMarkMessagesAsReadMutation } from '../../../../redux/features/chat/chatApi';
 import { useAppSelector, useAppDispatch } from '../../../../redux/hooks';
 import { format } from 'date-fns';
 import useSocket from '../../../../shared/hooks/useSocket';
-import { addMessage, setMessages, clearUnreadCount } from '../../../../redux/features/chat/chatSlice';
+import {
+    addMessage,
+    setMessages,
+    clearUnreadCount,
+    markConversationAsResolved
+} from '../../../../redux/features/chat/chatSlice';
 import { IChatMessage } from '../../../../types/chat.types';
 import { TUser } from '../../../../types/types';
 import LinearLoader from '../../../../shared/components/LinearLoader';
@@ -28,8 +33,15 @@ const ChatWindow = ({ conversationId }: ChatWindowProps) => {
     const conversations = useAppSelector(state => state.chat.conversations);
     const typingStatus = useAppSelector(state => state.chat.typingUsers[conversationId] || false);
 
+
     // Find the current conversation
     const currentConversation = conversations.find(conv => conv.conversation_id === conversationId);
+    const RESOLVED_MESSAGE = "Your doubt is solved. Thank you";
+
+    const isResolved = messages.length > 0 && messages[messages.length - 1].message === RESOLVED_MESSAGE;
+
+
+
     const recipientId = typeof currentConversation?.student_id === 'object'
         ? (currentConversation?.student_id as { _id: string; })?._id
         : currentConversation?.student_id;
@@ -239,6 +251,19 @@ const ChatWindow = ({ conversationId }: ChatWindowProps) => {
         );
     }
 
+    const handleMarkAsResolved = () => {
+        if (!recipientId) return;
+
+        // The button's only job is to send the resolution message
+        socketService.sendMessage({
+            conversation_id: conversationId,
+            message: RESOLVED_MESSAGE,
+            recipient_id: recipientId
+        });
+    };
+
+
+
     return (
         <Box sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Chat header */}
@@ -248,17 +273,25 @@ const ChatWindow = ({ conversationId }: ChatWindowProps) => {
                 borderColor: 'divider',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'space-between',
                 gap: 2
             }}>
-                <Avatar alt={currentConversation.participant.name} src="/static/images/avatar/1.jpg" />
-                <Box>
-                    <Typography variant="subtitle1" fontWeight="medium">
-                        {currentConversation.participant.name}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                        {currentConversation.subject}
-                    </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar alt={currentConversation.participant.name} src="/static/images/avatar/1.jpg" />
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight="medium">
+                            {currentConversation.participant.name}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                            {currentConversation.message}
+                        </Typography>
+                    </Box>
                 </Box>
+                {!isResolved && (
+                    <Button onClick={handleMarkAsResolved}>
+                        Mark as Resolved
+                    </Button>
+                )}
             </Box>
 
             {/* Messages area */}
@@ -382,6 +415,12 @@ const ChatWindow = ({ conversationId }: ChatWindowProps) => {
                 alignItems: 'center',
                 gap: 1
             }}>
+                {isResolved ? (
+                    <Typography variant="body1" color="textSecondary" sx={{ width: '100%', textAlign: 'center' }}>
+                        This conversation is resolved.
+                    </Typography>
+                ) : (
+                    <>
                 <TextField
                     fullWidth
                     placeholder="Type a message..."
@@ -409,7 +448,10 @@ const ChatWindow = ({ conversationId }: ChatWindowProps) => {
                 >
                     <SendIcon />
                 </IconButton>
+                    </>
+                )}
             </Box>
+
         </Box>
     );
 };

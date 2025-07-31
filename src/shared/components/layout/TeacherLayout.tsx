@@ -36,6 +36,7 @@ import {
 import { PURGE } from "redux-persist";
 import { baseApi } from "../../../redux/api/baseApi";
 import { TUserData } from "../../../types/types";
+import {CheckmarkIcon} from "react-hot-toast";
 
 const drawerWidth = 256;
 const teacherDashboardMenus = [
@@ -63,6 +64,11 @@ const teacherDashboardMenus = [
     path: "/teacher/question-database",
     name: "Question Database",
     icon: <DatabaseIcon />,
+  },
+  {
+    path: "/teacher/proof-check",
+    name: "Proof Check",
+    icon: <CheckmarkIcon />,
   },
   {
     path: "/teacher/profile",
@@ -174,20 +180,21 @@ export const TeacherLayout = () => {
   const assignedSet = new Set(assignedWorks.map((w) => w.toLowerCase()));
 
   // Checking if all 4 main items are assigned
-  const hasAllAssigned = ["Flashcard", "Questions", "Course", "Messages"].every(
+  const hasAllAssigned = ["Flashcard", "Questions", "Course", "Messages", "Proof_Check"].every(
     (item) => assignedSet.has(item.toLowerCase())
   );
 
   // Final filter
   const filteredMenus = teacherDashboardMenus.filter((menu) => {
+    console.log(assignedSet);
     if (menu.name === "Profile") return true;
     if (menu.name === "Dashboard") return hasAllAssigned;
 
     if (menu.name === "My Course" && assignedSet.has("course")) return true;
     if (menu.name === "Messages" && assignedSet.has("messages")) return true;
     if (menu.name === "Flashcard" && assignedSet.has("flashcard")) return true;
-    if (menu.name === "Question Database" && assignedSet.has("questions"))
-      return true;
+    if (menu.name === "Question Database" && assignedSet.has("questions")) return true;
+    if (menu.name === "Proof Check" && assignedSet.has("proof_check")) return true;
 
     return false;
   });
