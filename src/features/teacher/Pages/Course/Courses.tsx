@@ -64,8 +64,8 @@ const Courses = ({ courses }: any) => {
                             {isAdmin ? "Course Management" : "My Courses"}
                         </h2>
                     </Box>
-                    {/* Only show Create Course button for teachers */}
-                    {!isAdmin && (
+                    {/* Only show Create Course button for teachers with permission */}
+                    {!isAdmin && user.hasCoursePermission && (
                         <Box>
                             <Link to={`/teacher/create-course`} style={{ textDecoration: 'none', color: '#3F3F46' }}>
                                 <Button variant='contained' sx={{ width: 'auto', height: '44px', borderRadius: '8px', fontSize: '16px' }}>
