@@ -6,7 +6,7 @@ const Alert = ({ openSnackbar, autoHideDuration, handleCloseSnackbar, isSuccess,
             open={openSnackbar}
             autoHideDuration={autoHideDuration}
             onClose={handleCloseSnackbar}
-            message={isSuccess ? (`${successMessage}` || `Question added to database successfully!`) : (`${message}` || 'There was a problem')}
+            message={isSuccess ? (successMessage || 'Operation completed successfully!') : (message || errorMessage || 'There was a problem')}
         />
     );
 };
