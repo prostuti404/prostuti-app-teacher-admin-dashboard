@@ -232,7 +232,7 @@ const AcademicQuestion = () => {
 
                                     {/* question title  */}
                                     <Grid size={12}>
-                                        <CustomLabel fieldName={`Question-${index + 1}`} />
+                                        <CustomLabel fieldName={`Question-${(page - 1) * questionsPerPage + index + 1}`} />
                                         <CustomTextField
                                             name={'question'}
                                             disabled
