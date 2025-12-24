@@ -9,6 +9,7 @@ export type TUser = {
     exp: number;
     iat: number;
     role: string;
+    hasCoursePermission?: boolean;
 };
 
 export type TUserData = {
