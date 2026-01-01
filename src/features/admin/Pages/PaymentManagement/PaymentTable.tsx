@@ -1,14 +1,14 @@
 import {
-    Box,
-    IconButton,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Typography,
+  Box,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
 } from "@mui/material";
 import { ArrowRightIcon } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
@@ -17,7 +17,7 @@ import Loader from "../../../../shared/components/Loader";
 import { useNavigate } from "react-router-dom";
 
 const PaymentTable = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const { data: paymentsData, isLoading, isError } = useGetAllPaymentsQuery({});
 
   if (isLoading) {
@@ -66,16 +66,16 @@ const PaymentTable = () => {
                 </TableCell>
                 <TableCell>
                   {payment.isCouponAdded ? (
-                    <Typography color="success.main">Active</Typography>
+                    <Typography color="success.main">Applied</Typography>
                   ) : (
-                    <Typography color="error.main">Inactive</Typography>
+                    <Typography color="text.secondary">Not Applied</Typography>
                   )}
                 </TableCell>
                 <TableCell>
-                  <IconButton onClick={()=>navigate(`/admin/payment-management/${payment._id}`)}>
+                  <IconButton onClick={() => navigate(`/admin/payment-management/${payment._id}`)}>
                     <ArrowRightIcon />
                   </IconButton>
-                  
+
                 </TableCell>
               </TableRow>
             ))}
@@ -85,7 +85,7 @@ const PaymentTable = () => {
     </TableContainer>
   );
 
-  
+
 };
 
 export default PaymentTable;

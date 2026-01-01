@@ -26,6 +26,8 @@ import dayjs from "dayjs";
 import { useCreateCouponMutation } from "../../../../redux/features/coupon/couponApi";
 import { ICreateCouponPayload } from "../../../../types/coupon.types";
 import Alert from "../../../../shared/components/Alert";
+import toast from "react-hot-toast";
+import { getErrorMessage } from "../../../../utils/getErrorMessage";
 
 // Create an intermediary type for the form
 interface CouponFormData {
@@ -52,7 +54,7 @@ const couponSchema = z
     endDate: z.any().refine((val) => dayjs(val).isValid(), {
       message: "Invalid end date",
     }),
-    
+
     student_id: z.string(),
   }).strict()
   .refine((data) => dayjs(data.endDate).isAfter(dayjs(data.startDate)), {
@@ -73,8 +75,8 @@ interface AddCouponModalProps {
   student_id: string;
 }
 
-const AddCouponUserModal: React.FC<AddCouponModalProps> = ({ open, onClose,student_id }) => {
-  const [createCoupon, { isLoading,isSuccess }] = useCreateCouponMutation();
+const AddCouponUserModal: React.FC<AddCouponModalProps> = ({ open, onClose, student_id }) => {
+  const [createCoupon, { isLoading, isSuccess }] = useCreateCouponMutation();
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const {
@@ -108,19 +110,20 @@ const AddCouponUserModal: React.FC<AddCouponModalProps> = ({ open, onClose,stude
 
   const onSubmit = async (data: CouponFormData) => {
     const { voucherType, ...payload } = data;
-  try {
-    const apiPayload: ICreateCouponPayload = {
-      ...payload,
-      startDate: data.startDate.toISOString(),
-      endDate: data.endDate.toISOString()
-    };
-    await createCoupon(apiPayload).unwrap();
-    setOpenSnackbar(true);
-    reset();
-    onClose();
-  } catch (error) {
-    console.error('Failed to create coupon:', error);
-  }
+    try {
+      const apiPayload: ICreateCouponPayload = {
+        ...payload,
+        startDate: data.startDate.toISOString(),
+        endDate: data.endDate.toISOString()
+      };
+      await createCoupon(apiPayload).unwrap();
+      setOpenSnackbar(true);
+      reset();
+      onClose();
+    } catch (error) {
+      console.error('Failed to create coupon:', error);
+      toast.error(getErrorMessage(error, "Failed to create coupon"));
+    }
   }
 
   const handleClose = () => {
@@ -243,7 +246,7 @@ const AddCouponUserModal: React.FC<AddCouponModalProps> = ({ open, onClose,stude
           </Box>
         </DialogContent>
         <DialogActions>
-            
+
           <Button
             type="submit"
             variant="contained"
@@ -252,7 +255,7 @@ const AddCouponUserModal: React.FC<AddCouponModalProps> = ({ open, onClose,stude
           >
             {isLoading ? "Creating..." : "Create"}
           </Button>
-          
+
         </DialogActions>
       </form>
       <Alert

@@ -26,6 +26,8 @@ import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { useCreateCouponMutation } from "../../../../redux/features/coupon/couponApi";
 import { ICreateCouponPayload } from "../../../../types/coupon.types";
+import toast from "react-hot-toast";
+import { getErrorMessage } from "../../../../utils/getErrorMessage";
 
 // Create an intermediary type for the form
 interface CouponFormData {
@@ -124,6 +126,7 @@ const AddCouponModal: React.FC<AddCouponModalProps> = ({ open, onClose, courseId
       onClose();
     } catch (error) {
       console.error("Failed to create coupon:", error);
+      toast.error(getErrorMessage(error, "Failed to create coupon"));
     }
     // const { activeForAllCourses, ...payload } = data;
     // const apiPayload: ICreateCouponPayload = {

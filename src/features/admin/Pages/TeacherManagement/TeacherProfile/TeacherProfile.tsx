@@ -24,6 +24,7 @@ import CustomTextField from "../../../../../shared/components/CustomTextField";
 import Loader from "../../../../../shared/components/Loader";
 import { teacherAssignedWorks } from "../../../../../constants";
 import toast from "react-hot-toast";
+import { getErrorMessage } from "../../../../../utils/getErrorMessage";
 
 const activities = [
   { detail: "Accepted Flashcard", time: "3 minutes ago" },
@@ -83,6 +84,7 @@ const TeacherProfile = () => {
       toast.success("Assigned Works Updated Successfully");
     } catch (error) {
       console.error("Failed to update assigned works:", error);
+      toast.error(getErrorMessage(error, "Failed to update assigned works"));
     }
   };
 

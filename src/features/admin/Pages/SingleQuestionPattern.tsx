@@ -14,6 +14,7 @@ import CustomTextField from '../../../shared/components/CustomTextField';
 import { useGetQuestionPatternByIdQuery, useDeleteQuestionPatternMutation } from '../../../redux/features/practiceTestApi';
 import Loader from '../../../shared/components/Loader';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import { getErrorMessage } from '../../../utils/getErrorMessage';
 
 const SingleQuestionPattern = () => {
     const { qpId } = useParams();
@@ -28,7 +29,7 @@ const SingleQuestionPattern = () => {
             setSnackbar({ open: true, message: 'Question pattern deleted successfully', severity: 'success' });
             setTimeout(() => navigate('/admin/practice-test'), 1500);
         } catch (error) {
-            setSnackbar({ open: true, message: 'Failed to delete question pattern', severity: 'error' });
+            setSnackbar({ open: true, message: getErrorMessage(error, 'Failed to delete question pattern'), severity: 'error' });
         }
     };
 

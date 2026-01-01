@@ -21,6 +21,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useCreateQuestionPatternMutation } from "../../../redux/features/questionPatternApi.ts";
 import { useNavigate } from "react-router-dom";
 import { ArrowBackIcon } from "../../teacher/Pages/Materials/Create Test/index.ts";
+import toast from "react-hot-toast";
+import { getErrorMessage } from "../../../utils/getErrorMessage";
 
 const PracticeTestCreation = () => {
     const [errors, setErrors] = useState<{ [key: string]: string[]; }>({});
@@ -328,8 +330,10 @@ const PracticeTestCreation = () => {
         } catch (error) {
             // Handle error
             console.error('Error creating test:', error);
-            setErrorMessages(['Failed to create test. Please try again.']);
+            const apiErrorMessage = getErrorMessage(error, 'Failed to create test. Please try again.');
+            setErrorMessages([apiErrorMessage]);
             setOpenErrorSnackbar(true);
+            toast.error(apiErrorMessage);
         }
     };
 

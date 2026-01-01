@@ -21,6 +21,7 @@ import {
 } from "../../../../../redux/features/teacherManagement/teacherManagementApi";
 import toast from "react-hot-toast";
 import { z } from "zod";
+import { getErrorMessage } from "../../../../../utils/getErrorMessage";
 
 const selectStyles = {
   mb: 2,
@@ -135,6 +136,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
       setErrors({ email: "", password: "" });
     } catch (error) {
       console.error("Failed to create teacher:", error);
+      toast.error(getErrorMessage(error, "Failed to create teacher"));
     }
   };
 

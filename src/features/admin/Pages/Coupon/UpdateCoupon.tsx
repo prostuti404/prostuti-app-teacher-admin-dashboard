@@ -23,12 +23,14 @@ import { z } from "zod";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { 
+import {
   useUpdateCouponMutation,
-  useGetCouponByIdQuery ,
+  useGetCouponByIdQuery,
   useDeleteCouponMutation
 } from "../../../../redux/features/coupon/couponApi";
 import { IUpdateCouponPayload } from "../../../../types/coupon.types";
+import toast from "react-hot-toast";
+import { getErrorMessage } from "../../../../utils/getErrorMessage";
 
 // Create an intermediary type for the form
 interface CouponFormData {
@@ -83,16 +85,16 @@ interface UpdateCouponModalProps {
   couponId: string | null;
 }
 
-const UpdateCouponModal: React.FC<UpdateCouponModalProps> = ({ 
-  open, 
-  onClose, 
-  couponId 
+const UpdateCouponModal: React.FC<UpdateCouponModalProps> = ({
+  open,
+  onClose,
+  couponId
 }) => {
   const { data: couponData, isLoading: isFetching } = useGetCouponByIdQuery(
-    couponId || '', 
+    couponId || '',
     { skip: !couponId || !open }
   );
-  
+
   const [updateCoupon, { isLoading: isUpdating }] = useUpdateCouponMutation();
   const [deleteCoupon, { isLoading: isDeleting }] = useDeleteCouponMutation();
 
@@ -126,11 +128,11 @@ const UpdateCouponModal: React.FC<UpdateCouponModalProps> = ({
       setValue("voucherType", coupon.voucherType);
       setValue("startDate", dayjs(coupon.startDate));
       setValue("endDate", dayjs(coupon.endDate));
-      
+
       if (coupon.course_id) {
         setValue("course_id", coupon.course_id);
       }
-      
+
       if (coupon.student_id) {
         setValue("student_id", coupon.student_id._id);
       }
@@ -141,35 +143,37 @@ const UpdateCouponModal: React.FC<UpdateCouponModalProps> = ({
 
   const onSubmit = async (data: CouponFormData) => {
     if (!couponId) return;
-    
+
     try {
       const { voucherType, ...payload } = data;
-      
+
       const apiPayload: IUpdateCouponPayload = {
         id: couponId,
         ...payload,
         startDate: data.startDate.toISOString(),
         endDate: data.endDate.toISOString()
       };
-      
+
       await updateCoupon(apiPayload).unwrap();
       reset();
       onClose();
     } catch (error) {
       console.error('Failed to update coupon:', error);
+      toast.error(getErrorMessage(error, "Failed to update coupon"));
     }
   };
   const handleDelete = async () => {
     if (!couponId) return;
-    
+
     try {
       await deleteCoupon(couponId).unwrap();
       onClose();
     } catch (error) {
       console.error('Failed to delete coupon:', error);
+      toast.error(getErrorMessage(error, "Failed to delete coupon"));
     }
   };
-  
+
 
   const handleClose = () => {
     reset();
@@ -192,7 +196,7 @@ const UpdateCouponModal: React.FC<UpdateCouponModalProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      
+
       {isFetching ? (
         <DialogContent>
           <Box display="flex" justifyContent="center" alignItems="center" height="300px">
@@ -357,23 +361,23 @@ const UpdateCouponModal: React.FC<UpdateCouponModalProps> = ({
             </Box>
           </DialogContent>
           <DialogActions>
-  <Button
-     variant="outlined"
-     color="primary"
-    onClick={handleDelete}
-    disabled={isDeleting}
-  >
-    {isDeleting ? "Deleting..." : "Delete"}
-  </Button>
-  <Button
-    type="submit"
-    variant="contained"
-    color="primary"
-    disabled={isUpdating || !isDirty}
-  >
-    {isUpdating ? "Saving..." : "Save"}
-  </Button>
-</DialogActions>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isUpdating || !isDirty}
+            >
+              {isUpdating ? "Saving..." : "Save"}
+            </Button>
+          </DialogActions>
         </form>
       )}
     </Dialog>
