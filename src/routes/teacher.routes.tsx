@@ -35,6 +35,7 @@ import EditLesson from "../features/teacher/Pages/Course/EditLesson";
 import StudentPerformanceList from "../features/teacher/Pages/Materials/StudentPerformance/StudentPerformanceList";
 import SingleStudentPerformance from "../features/teacher/Pages/Materials/StudentPerformance/SingleStudentPerformance";
 import ProofCheck from "../features/teacher/Pages/ProofCheck.tsx";
+import PermissionGuard from "../shared/components/PermissionGuard";
 
 export const teacherRoutes = [
   {
@@ -43,11 +44,19 @@ export const teacherRoutes = [
   },
   {
     path: "my-course",
-    element: <MyCourse />,
+    element: (
+      <PermissionGuard requiredPermission="course">
+        <MyCourse />
+      </PermissionGuard>
+    ),
   },
   {
     path: "messages",
-    element: <Messages />,
+    element: (
+      <PermissionGuard requiredPermission="messages">
+        <Messages />
+      </PermissionGuard>
+    ),
   },
   {
     path: "profile",
@@ -55,44 +64,80 @@ export const teacherRoutes = [
   },
   {
     path: "question-database",
-    element: <QuestionDatabase />,
+    element: (
+      <PermissionGuard requiredPermission="questions">
+        <QuestionDatabase />
+      </PermissionGuard>
+    ),
   },
   // flashcard paths
   {
     path: "flashcard",
-    element: <FlashCard />,
+    element: (
+      <PermissionGuard requiredPermission="flashcard">
+        <FlashCard />
+      </PermissionGuard>
+    ),
   },
   {
     path: "flashcard/:flashcardId",
-    element: <ChildFlashCards />,
+    element: (
+      <PermissionGuard requiredPermission="flashcard">
+        <ChildFlashCards />
+      </PermissionGuard>
+    ),
   },
 
   // question database paths
   {
     path: "academic-question",
-    element: <AcademicQuestion />,
+    element: (
+      <PermissionGuard requiredPermission="questions">
+        <AcademicQuestion />
+      </PermissionGuard>
+    ),
   },
   {
     path: "admission-question",
-    element: <AdmissionQuestion />,
+    element: (
+      <PermissionGuard requiredPermission="questions">
+        <AdmissionQuestion />
+      </PermissionGuard>
+    ),
   },
   {
     path: "job-question",
-    element: <JobQuestion />,
+    element: (
+      <PermissionGuard requiredPermission="questions">
+        <JobQuestion />
+      </PermissionGuard>
+    ),
   },
   {
     path: "add-question",
-    element: <AddQuestion />,
+    element: (
+      <PermissionGuard requiredPermission="questions">
+        <AddQuestion />
+      </PermissionGuard>
+    ),
   },
 
   // course preview route
   {
     path: "course-preview/:courseId",
-    element: <CoursePreview />,
+    element: (
+      <PermissionGuard requiredPermission="course">
+        <CoursePreview />
+      </PermissionGuard>
+    ),
   },
   {
     path: "edit-lessons",
-    element: <EditLesson />,
+    element: (
+      <PermissionGuard requiredPermission="course">
+        <EditLesson />
+      </PermissionGuard>
+    ),
   },
 
   // course update routes
@@ -176,7 +221,11 @@ export const teacherRoutes = [
   // course paths
   {
     path: "create-course",
-    element: <CreateCourse />,
+    element: (
+      <PermissionGuard requiredPermission="course">
+        <CreateCourse />
+      </PermissionGuard>
+    ),
     children: [
       {
         path: "create-course",
@@ -224,6 +273,10 @@ export const teacherRoutes = [
   },
   {
     path: "proof-check",
-    element: <ProofCheck />,
+    element: (
+      <PermissionGuard requiredPermission="proof_check">
+        <ProofCheck />
+      </PermissionGuard>
+    ),
   },
 ];

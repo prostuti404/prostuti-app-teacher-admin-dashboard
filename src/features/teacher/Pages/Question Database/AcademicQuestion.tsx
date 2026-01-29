@@ -82,8 +82,7 @@ const AcademicQuestion = () => {
         }, {} as Record<string, string>);
 
         setPage(1);
-        // setFilterToSubmit({ ...cleanedFilter, page: page.toString(), limit: '10' });
-        setFilterToSubmit(cleanedFilter);
+        setFilterToSubmit({ ...cleanedFilter, page: '1', limit: questionsPerPage.toString() });
         refetch();
     };
 
@@ -106,11 +105,7 @@ const AcademicQuestion = () => {
     if (filteredDataLoading || questionDeleting) {
         return (<Loader />);
     }
-    const allQuestions = questionData?.data.data || [];
-    const paginatedQuestions = allQuestions.slice(
-        (page - 1) * questionsPerPage,
-        page * questionsPerPage
-    );
+    const paginatedQuestions = questionData?.data.data || [];
 
     return (
         <Box sx={{ width: '100%', height: 'auto' }}>
@@ -269,12 +264,15 @@ const AcademicQuestion = () => {
                             ))
                         }
                         {/* Pagination */}
-                        {allQuestions.length > questionsPerPage && (
+                        {questionData?.data?.meta?.total > questionsPerPage && (
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
                                 <Pagination
-                                    count={Math.ceil(allQuestions.length / questionsPerPage)}
+                                    count={Math.ceil((questionData?.data?.meta?.total || 0) / questionsPerPage)}
                                     page={page}
-                                    onChange={(event, value) => setPage(value)}
+                                    onChange={(event, value) => {
+                                        setPage(value);
+                                        setFilterToSubmit((prev) => ({ ...prev, page: value.toString(), limit: questionsPerPage.toString() }));
+                                    }}
                                     color="primary"
                                 />
                             </Box>
