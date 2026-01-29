@@ -207,7 +207,7 @@ const ChildFlashCards = () => {
 
                         {/* buttons for pending flashcards */}
                         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                            {user.role === 'admin' && <EditRequestButton resourceType="Flashcard" resourceId={flashcardId} />}
+                            {(user.role === 'admin' || user.role === 'teacher') && <EditRequestButton resourceType="Flashcard" resourceId={flashcardId} />}
                             {
                                 !approved && (
                                     <Box sx={{ display: 'flex', gap: 2 }}>
