@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useGetTeacherProfileQuery } from "../../../redux/features/teacher/teacherApi";
+import { useGetTeacherProfileQuery } from "../../redux/features/teacher/teacherApi";
 import Loader from "./Loader";
 
 interface PermissionGuardProps {
