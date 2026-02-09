@@ -11,7 +11,6 @@ import { useAppDispatch, useAppSelector } from '../../../../redux/hooks';
 import { saveCourseIdToStore } from '../../../../redux/features/course/courseSlice';
 import { RootState } from '../../../../redux/store';
 import { TUser } from '../../../../types/types';
-import { useGetTeacherProfileQuery } from '../../../../redux/features/teacher/teacherApi';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -48,11 +47,6 @@ const Courses = ({ courses }: any) => {
     const user = useAppSelector((state: RootState) => state.auth.user as TUser);
     const isAdmin = user.role === "admin";
 
-    // Fetch teacher profile to check course permission from assignedWorks
-    const { data: profileData } = useGetTeacherProfileQuery({}, { skip: isAdmin });
-    const assignedWorks = profileData?.data?.assignedWorks || [];
-    const hasCoursePermission = assignedWorks.some((w: string) => w.toLowerCase() === "course");
-
     // filtering the courses according to isPublished key
     const publishedCourses = courses.filter((course: any) => course.isPublished === true) || [];
     const unpublishedCourses = courses.filter((course: any) => course.isPublished === false) || [];
@@ -70,8 +64,8 @@ const Courses = ({ courses }: any) => {
                             {isAdmin ? "Course Management" : "My Courses"}
                         </h2>
                     </Box>
-                    {/* Only show Create Course button for teachers with permission */}
-                    {!isAdmin && hasCoursePermission && (
+                    {/* Show Create Course button for teachers (route is already protected by PermissionGuard) */}
+                    {!isAdmin && (
                         <Box>
                             <Link to={`/teacher/create-course`} style={{ textDecoration: 'none', color: '#3F3F46' }}>
                                 <Button variant='contained' sx={{ width: 'auto', height: '44px', borderRadius: '8px', fontSize: '16px' }}>
