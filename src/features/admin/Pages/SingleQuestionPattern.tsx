@@ -40,6 +40,8 @@ const SingleQuestionPattern = () => {
         category_id,
         time,
         questionType,
+        mcqCount,
+        writtenCount,
         mainSubjects,
         optionalSubjects,
     } = pattern;
@@ -140,6 +142,26 @@ const SingleQuestionPattern = () => {
                             disabled
                         />
                     </Grid>
+                    {questionType === 'Hybrid' && (
+                        <>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography>MCQ Count</Typography>
+                                <CustomTextField
+                                    name="mcqCount"
+                                    value={mcqCount?.toString() || '0'}
+                                    disabled
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography>Written Count</Typography>
+                                <CustomTextField
+                                    name="writtenCount"
+                                    value={writtenCount?.toString() || '0'}
+                                    disabled
+                                />
+                            </Grid>
+                        </>
+                    )}
                 </Grid>
 
                 <Divider sx={{ my: 3 }} />

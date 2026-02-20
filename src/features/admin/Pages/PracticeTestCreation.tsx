@@ -32,6 +32,8 @@ const PracticeTestCreation = () => {
     const [testDetails, setTestDetails] = useState({
         time: "",
         questionType: "MCQ", // Default question type for the entire test
+        mcqCount: "",
+        writtenCount: "",
     });
 
     // category params state
@@ -285,13 +287,19 @@ const PracticeTestCreation = () => {
             }));
 
         // Prepare test data with the updated structure
-        const testData = {
+        const testData: any = {
             category_id: categoryIds, // Use all category IDs
             time: parseInt(testDetails.time),
             questionType: testDetails.questionType, // Single questionType at the top level
             mainSubjects,
             optionalSubjects
         };
+
+        // Add mcqCount and writtenCount for Hybrid type
+        if (testDetails.questionType === 'Hybrid') {
+            testData.mcqCount = parseInt(testDetails.mcqCount) || 0;
+            testData.writtenCount = parseInt(testDetails.writtenCount) || 0;
+        }
 
         // Reset previous errors
         setErrors({});
@@ -306,6 +314,8 @@ const PracticeTestCreation = () => {
             setTestDetails({
                 time: "",
                 questionType: "MCQ",
+                mcqCount: "",
+                writtenCount: "",
             });
             setCategoryParams({
                 category: '',
@@ -466,13 +476,39 @@ const PracticeTestCreation = () => {
                                 <Grid size={6}>
                                     <CustomLabel fieldName="Question Type*" />
                                     <CustomAutoComplete
-                                        options={['MCQ', 'Written']}
+                                        options={['MCQ', 'Written', 'Hybrid']}
                                         name="questionType"
                                         handleInput={handleInput}
                                         required={true}
                                         value={testDetails.questionType}
                                     />
                                 </Grid>
+
+                                {/* MCQ Count and Written Count fields for Hybrid type */}
+                                {testDetails.questionType === 'Hybrid' && (
+                                    <>
+                                        <Grid size={3}>
+                                            <CustomLabel fieldName="MCQ Count*" />
+                                            <CustomTextField
+                                                name="mcqCount"
+                                                type="number"
+                                                handleInput={handleInput}
+                                                value={testDetails.mcqCount || ""}
+                                                required
+                                            />
+                                        </Grid>
+                                        <Grid size={3}>
+                                            <CustomLabel fieldName="Written Count*" />
+                                            <CustomTextField
+                                                name="writtenCount"
+                                                type="number"
+                                                handleInput={handleInput}
+                                                value={testDetails.writtenCount || ""}
+                                                required
+                                            />
+                                        </Grid>
+                                    </>
+                                )}
 
                                 {/* Subject Sections */}
                                 <Grid size={12}>
