@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Paper, Typography } from "@mui/material";
+import { Box, Button, Chip, Paper, Snackbar, Alert, TextField, MenuItem, Typography } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import PublishIcon from '@mui/icons-material/Publish';
+import UnpublishedIcon from '@mui/icons-material/Unpublished';
+import AddIcon from '@mui/icons-material/Add';
 import { Link } from "react-router-dom";
 import { useGetCoursePreviewQuery } from "../../../../redux/features/course/courseApi";
+import { useGetAllRoutinesQuery, usePublishRoutineMutation, useCreateRoutineMutation } from "../../../../redux/features/materials/materialsApi";
 import { useAppSelector } from "../../../../redux/hooks";
 import Loader from "../../../../shared/components/Loader";
 import { RootState } from "../../../../redux/store";
@@ -15,6 +19,18 @@ const Routine = () => {
     const user = useAppSelector((state: RootState) => state.auth.user as TUser);
     const courseId = useAppSelector((state) => state.courseAndLessonId.id.course_id);
     const { data: courseData, isLoading } = useGetCoursePreviewQuery({ courseId });
+
+    // Routine API hooks
+    const { data: routinesData, isLoading: routinesLoading, refetch: refetchRoutines } = useGetAllRoutinesQuery({ course_id: courseId, limit: 0 });
+    const [publishRoutine] = usePublishRoutineMutation();
+    const [createRoutine] = useCreateRoutineMutation();
+
+    // Snackbar state
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+
+    // Create routine form state
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    const [newRoutine, setNewRoutine] = useState({ type: 'Class', date: '' });
 
     // State for handling current month and year
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -276,7 +292,35 @@ const Routine = () => {
 
     const weeksArray = chunkArray(calendarData, 7);
 
-    if (isLoading) {
+    // Handle publish toggle
+    const handlePublishToggle = async (id: string, currentStatus: boolean) => {
+        try {
+            await publishRoutine({ id, isPublished: !currentStatus }).unwrap();
+            setSnackbar({ open: true, message: `Routine ${!currentStatus ? 'published' : 'unpublished'} successfully`, severity: 'success' });
+            refetchRoutines();
+        } catch {
+            setSnackbar({ open: true, message: 'Failed to update routine status', severity: 'error' });
+        }
+    };
+
+    // Handle create routine
+    const handleCreateRoutine = async () => {
+        if (!newRoutine.date) {
+            setSnackbar({ open: true, message: 'Please select a date', severity: 'error' });
+            return;
+        }
+        try {
+            await createRoutine({ course_id: courseId, type: newRoutine.type, date: new Date(newRoutine.date).toISOString() }).unwrap();
+            setSnackbar({ open: true, message: 'Routine created successfully', severity: 'success' });
+            setShowCreateForm(false);
+            setNewRoutine({ type: 'Class', date: '' });
+            refetchRoutines();
+        } catch {
+            setSnackbar({ open: true, message: 'Failed to create routine', severity: 'error' });
+        }
+    };
+
+    if (isLoading || routinesLoading) {
         return <Loader />;
     }
 
@@ -300,7 +344,95 @@ const Routine = () => {
                         </Link>
                         <Typography variant='h4' sx={{ fontWeight: 600 }}>Course Schedule</Typography>
                     </Box>
+                    {/* Add Routine button (teacher only) */}
+                    {user.role === 'teacher' && (
+                        <Button
+                            variant='contained'
+                            startIcon={<AddIcon />}
+                            onClick={() => setShowCreateForm(!showCreateForm)}
+                            sx={{ borderRadius: '8px' }}
+                        >
+                            {showCreateForm ? 'Cancel' : 'Add Routine'}
+                        </Button>
+                    )}
                 </Box>
+
+                {/* Create Routine Form */}
+                {showCreateForm && (
+                    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: '10px', bgcolor: '#F9FAFB' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Create New Routine Entry</Typography>
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <TextField
+                                select
+                                label="Type"
+                                value={newRoutine.type}
+                                onChange={(e) => setNewRoutine(prev => ({ ...prev, type: e.target.value }))}
+                                size="small"
+                                sx={{ minWidth: 140 }}
+                            >
+                                {['Class', 'Assignment', 'Exam'].map(t => (
+                                    <MenuItem key={t} value={t}>{t}</MenuItem>
+                                ))}
+                            </TextField>
+                            <TextField
+                                label="Date"
+                                type="date"
+                                value={newRoutine.date}
+                                onChange={(e) => setNewRoutine(prev => ({ ...prev, date: e.target.value }))}
+                                size="small"
+                                InputLabelProps={{ shrink: true }}
+                            />
+                            <Button variant="contained" onClick={handleCreateRoutine} sx={{ borderRadius: '8px' }}>Create</Button>
+                        </Box>
+                    </Paper>
+                )}
+
+                {/* Routine Entries List */}
+                {routinesData?.data?.data?.length > 0 && (
+                    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: '10px' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Routine Entries</Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                            {routinesData.data.data.map((routine: any) => (
+                                <Box key={routine._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Chip
+                                            label={routine.type}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: getActivityColor(routine.type),
+                                                color: getActivityTextColor(routine.type),
+                                                fontWeight: 500
+                                            }}
+                                        />
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            {new Date(routine.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Chip
+                                            label={routine.isPublished ? 'Published' : 'Draft'}
+                                            size="small"
+                                            color={routine.isPublished ? 'success' : 'default'}
+                                            variant={routine.isPublished ? 'filled' : 'outlined'}
+                                        />
+                                        {user.role === 'teacher' && (
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                startIcon={routine.isPublished ? <UnpublishedIcon /> : <PublishIcon />}
+                                                color={routine.isPublished ? 'warning' : 'success'}
+                                                onClick={() => handlePublishToggle(routine._id, routine.isPublished)}
+                                                sx={{ borderRadius: '8px', textTransform: 'none' }}
+                                            >
+                                                {routine.isPublished ? 'Unpublish' : 'Publish'}
+                                            </Button>
+                                        )}
+                                    </Box>
+                                </Box>
+                            ))}
+                        </Box>
+                    </Paper>
+                )}
 
                 {/* Calendar Section */}
                 <Grid container spacing={2}>
@@ -470,6 +602,18 @@ const Routine = () => {
                     </Grid>
                 </Grid>
             </Paper>
+
+            {/* Snackbar for feedback */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert severity={snackbar.severity} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

@@ -7,7 +7,8 @@ import { RootState } from "../../../../redux/store";
 const CourseCard = ({ course }: any) => {
     const user = useAppSelector((state: RootState) => state.auth.user as TUser);
     // course - preview /: courseId
-    const { image: { path }, name, _id } = course;
+    const path = course?.image?.path || "https://placehold.co/600x400?text=No+Image";
+    const { name, _id } = course;
     return (
 
         <Link style={{ textDecoration: "none" }} to={user.role === 'admin' ? `/admin/course-preview/${_id}` : `/teacher/course-preview/${_id}`}>

@@ -217,6 +217,30 @@ const materialApi = baseApi.injectEndpoints({
                 };
             },
             invalidatesTags: ['Notice']
+        }),
+        createRoutine: builder.mutation({
+            query: (routineData) => ({
+                url: '/routine',
+                method: 'POST',
+                body: routineData
+            }),
+            invalidatesTags: ['Routine']
+        }),
+        getAllRoutines: builder.query({
+            query: (params) => ({
+                url: '/routine',
+                method: 'GET',
+                params
+            }),
+            providesTags: ['Routine']
+        }),
+        publishRoutine: builder.mutation({
+            query: ({ id, isPublished }) => ({
+                url: `/routine/${id}`,
+                method: 'PATCH',
+                body: { isPublished }
+            }),
+            invalidatesTags: ['Routine']
         })
     })
 });
@@ -243,5 +267,8 @@ export const {
     useUpdateTestMutation,
     useGetTestHistoryQuery,
     useGetSubmittedAssignmentListQuery,
-    useSubmitWrittenTestMarksMutation // Added new hook export
+    useSubmitWrittenTestMarksMutation,
+    useCreateRoutineMutation,
+    useGetAllRoutinesQuery,
+    usePublishRoutineMutation,
 } = materialApi;

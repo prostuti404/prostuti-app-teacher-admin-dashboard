@@ -61,7 +61,7 @@ const MyCoursesSection = ({ courses }) => {
                   }}
                 >
                   <img
-                    src={course.image.path}
+                    src={course?.image?.path || "https://placehold.co/600x400?text=No+Image"}
                     alt={course.name}
                     style={{
                       width: "100%",
