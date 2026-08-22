@@ -13,6 +13,7 @@ const AddQuestion = () => {
     const [question, setQuestion] = useState<Record<string, string>>({});
     const [imageFile, setImageFile] = useState<Record<string, File | null>>({});
     const [category_id, setCategory_id] = useState('');
+    const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
@@ -25,9 +26,18 @@ const AddQuestion = () => {
     // formatting question object to question array
     const questionArray = formatQuestion(question, category_id);
 
-    // Validate MCQ options and correct answer
-    const validateMCQOptions = () => {
+    // Validate all questions and fields
+    const validateQuestions = () => {
+        let isValid = true;
+        const newErrors: Record<string, string[]> = {};
+
         for (let i = 0; i < numOfForms; i++) {
+            const title = question[`title_${i}`]?.trim();
+            if (!title) {
+                newErrors[`title_${i}`] = ['Question title is required'];
+                isValid = false;
+            }
+
             if (question[`type_${i}`] === 'MCQ') {
                 const options = [];
                 for (let j = 1; j <= 4; j++) {
@@ -36,27 +46,42 @@ const AddQuestion = () => {
                         options.push(option);
                     }
                 }
-                const correctAnswer = question[`correctOption_${i}`]?.trim();
+                
+                if (options.length < 2) {
+                    newErrors[`option1_${i}`] = ['At least 2 options are required'];
+                    isValid = false;
+                }
 
-                if (correctAnswer && !options.includes(correctAnswer)) {
-                    setSnackbar({
-                        open: true,
-                        message: `Correct answer for question ${i + 1} must match one of the provided options`,
-                        severity: 'error'
-                    });
-                    return false;
+                const correctAnswer = question[`correctOption_${i}`]?.trim();
+                if (!correctAnswer) {
+                    newErrors[`correctOption_${i}`] = ['Correct answer is required'];
+                    isValid = false;
+                } else if (!options.includes(correctAnswer)) {
+                    newErrors[`correctOption_${i}`] = ['Correct answer must match one of the provided options'];
+                    isValid = false;
                 }
             }
         }
-        return true;
+
+        setErrors(newErrors);
+        
+        if (!isValid) {
+            setSnackbar({
+                open: true,
+                message: 'Please fill out all required fields correctly',
+                severity: 'error'
+            });
+        }
+
+        return isValid;
     };
 
     // temporary array
     const handleAddQuestion = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate MCQ options before submitting
-        if (!validateMCQOptions()) {
+        // Validate questions before submitting
+        if (!validateQuestions()) {
             return;
         }
 
@@ -177,6 +202,7 @@ const AddQuestion = () => {
                                                 setCategory_id={setCategory_id}
                                                 setImageFile={setImageFile}
                                                 imageFile={imageFile}
+                                                errors={errors}
                                             />
                                         </Grid>
                                     </Paper>

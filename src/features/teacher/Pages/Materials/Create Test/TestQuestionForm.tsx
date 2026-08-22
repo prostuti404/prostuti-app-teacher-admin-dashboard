@@ -2,7 +2,7 @@ import Grid from '@mui/material/Grid2';
 import CustomLabel from '../../../../../shared/components/CustomLabel';
 import CustomTextField from '../../../../../shared/components/CustomTextField';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { Box, Button, Divider, IconButton, Typography } from '@mui/material';
+import { Box, Button, Divider, IconButton, Typography, MenuItem, TextField } from '@mui/material';
 import { useRef, useState } from 'react';
 import AlertDialog from './AlertDialog';
 import { useAppSelector } from '../../../../../redux/hooks';
@@ -180,14 +180,44 @@ const TestQuestionForm = (
                         ))}
                         <Grid size={12}>
                             <CustomLabel fieldName='Correct Answer' />
-                            <CustomTextField
+                            <TextField
+                                select
+                                fullWidth
                                 name={`correctOption_${index}`}
-                                handleInput={handleTestQuestionInput}
-                                placeholder='Write the correct answer'
-                                value={question[`correctOption_${index}`]}
+                                value={question[`correctOption_${index}`] || ''}
+                                onChange={handleTestQuestionInput}
                                 error={Array.isArray(errors?.[`correctOption_${index}`]) && errors?.[`correctOption_${index}`].length > 0}
                                 helperText={errors?.[`correctOption_${index}`]?.join(' ')}
-                            />
+                                size="small"
+                                placeholder='Select the correct answer'
+                                sx={{
+                                    mt: 1,
+                                    backgroundColor: '#F9FAFB',
+                                    borderRadius: 1.5,
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: '#E5E7EB',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: '#E5E7EB',
+                                        },
+                                    }
+                                }}
+                            >
+                                {[1, 2, 3, 4].map((optIndex) => {
+                                    const optionValue = question[`option${optIndex}_${index}`];
+                                    if (!optionValue) return null; // Don't show empty options
+                                    return (
+                                        <MenuItem key={optIndex} value={optionValue}>
+                                            {optionValue}
+                                        </MenuItem>
+                                    );
+                                })}
+                                {/* Show a placeholder if no options are filled yet */}
+                                {![1, 2, 3, 4].some(optIndex => question[`option${optIndex}_${index}`]) && (
+                                    <MenuItem value="" disabled>Please fill in options first</MenuItem>
+                                )}
+                            </TextField>
                         </Grid>
                     </>
                 )

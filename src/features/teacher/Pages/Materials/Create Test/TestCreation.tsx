@@ -115,9 +115,15 @@ const TestCreation = () => {
             isValid = false;
         }
 
-        // Validate MCQ answers
-        if (testDetails?.type === 'MCQ') {
-            for (let i = 0; i < numOfForms; i++) {
+        // Validate question details
+        for (let i = 0; i < numOfForms; i++) {
+            const title = question[`title_${i}`]?.trim();
+            if (!title) {
+                newErrors[`title_${i}`] = ['Question title is required'];
+                isValid = false;
+            }
+
+            if (testDetails?.type === 'MCQ') {
                 const options = [];
                 for (let j = 1; j <= 4; j++) {
                     const option = question[`option${j}_${i}`]?.trim();
@@ -125,9 +131,17 @@ const TestCreation = () => {
                         options.push(option);
                     }
                 }
-                const correctAnswer = question[`correctOption_${i}`]?.trim();
+                
+                if (options.length < 2) {
+                    newErrors[`option1_${i}`] = ['At least 2 options are required'];
+                    isValid = false;
+                }
 
-                if (correctAnswer && !options.includes(correctAnswer)) {
+                const correctAnswer = question[`correctOption_${i}`]?.trim();
+                if (!correctAnswer) {
+                    newErrors[`correctOption_${i}`] = ['Correct answer is required'];
+                    isValid = false;
+                } else if (!options.includes(correctAnswer)) {
                     newErrors[`correctOption_${i}`] = ['Correct answer must match one of the provided options'];
                     isValid = false;
                 }

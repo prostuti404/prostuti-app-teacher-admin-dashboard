@@ -23,9 +23,10 @@ type TAddQuestionForm = {
     handleRemoveFile: (e: React.MouseEvent, index: number) => void;
     onSuccess?: () => void;
     onError?: (error: Error) => void;
+    errors?: Record<string, string[]>;
 };
 
-const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImageFile, imageFile, handleRemoveFile, onSuccess, onError }: TAddQuestionForm) => {
+const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImageFile, imageFile, handleRemoveFile, onSuccess, onError, errors }: TAddQuestionForm) => {
     // Snackbar state
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -346,6 +347,8 @@ const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImag
                     required={true}
                     handleFileInput={handleFileInput}
                     value={question[`title_${index}`]}
+                    error={Array.isArray(errors?.[`title_${index}`]) && errors?.[`title_${index}`].length > 0}
+                    helperText={errors?.[`title_${index}`]?.join(' ')}
                 />
                 {
                     imageFile[`${index}`] &&
@@ -383,18 +386,50 @@ const AddQuestionForm = ({ index, setQuestion, question, setCategory_id, setImag
                                     handleInput={handleInput}
                                     placeholder={`Option ${optionIndex + 1}`}
                                     required={true}
+                                    error={Array.isArray(errors?.[`option${optionIndex + 1}_${index}`]) && errors?.[`option${optionIndex + 1}_${index}`].length > 0}
+                                    helperText={errors?.[`option${optionIndex + 1}_${index}`]?.join(' ')}
                                 />
                             </Grid>
                         ))}
                         < Grid size={12}>
                             <CustomLabel fieldName='Correct Answer' />
-                            <CustomTextField
+                            <TextField
+                                select
+                                fullWidth
                                 name={`correctOption_${index}`}
-                                value={question[`correctOption_${index}`]}
-                                handleInput={handleInput}
-                                placeholder='Write the correct answer'
-                                required={true}
-                            />
+                                value={question[`correctOption_${index}`] || ''}
+                                onChange={handleInput}
+                                error={Array.isArray(errors?.[`correctOption_${index}`]) && errors?.[`correctOption_${index}`].length > 0}
+                                helperText={errors?.[`correctOption_${index}`]?.join(' ')}
+                                size="small"
+                                placeholder='Select the correct answer'
+                                sx={{
+                                    mt: 1,
+                                    backgroundColor: '#F9FAFB',
+                                    borderRadius: 1.5,
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: '#E5E7EB',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: '#E5E7EB',
+                                        },
+                                    }
+                                }}
+                            >
+                                {[1, 2, 3, 4].map((optIndex) => {
+                                    const optionValue = question[`option${optIndex}_${index}`];
+                                    if (!optionValue) return null;
+                                    return (
+                                        <MenuItem key={optIndex} value={optionValue}>
+                                            {optionValue}
+                                        </MenuItem>
+                                    );
+                                })}
+                                {![1, 2, 3, 4].some(optIndex => question[`option${optIndex}_${index}`]) && (
+                                    <MenuItem value="" disabled>Please fill in options first</MenuItem>
+                                )}
+                            </TextField>
                         </ Grid>
                     </>
                 )
