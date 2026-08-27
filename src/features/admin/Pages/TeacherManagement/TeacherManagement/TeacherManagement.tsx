@@ -11,7 +11,7 @@ const TeacherManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Filter states
-  const [subject, setSubject] = useState("");
+  const [subjects, setSubjects] = useState("");
   const [category, setCategory] = useState("");
 
   const handleClose = () => {
@@ -48,13 +48,13 @@ const TeacherManagement = () => {
         {/* Search + Filter */}
         <SearchBarWithFilter
           setSearchTerm={setSearchTerm}
-          setSubject={setSubject}
+          setSubjects={setSubjects}
           setCategory={setCategory}
         />
         {/* Table */}
         <TeachersTable
           searchTerm={searchTerm}
-          subject={subject}
+          subjects={subjects}
           category={category}
         />
       </Paper>

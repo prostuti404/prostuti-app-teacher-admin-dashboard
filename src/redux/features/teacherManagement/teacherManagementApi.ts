@@ -9,7 +9,7 @@ const teacherManagementAPI = baseApi.injectEndpoints({
 
         if (filters.searchTerm)
           queryParams.set("searchTerm", filters.searchTerm);
-        if (filters.subject) queryParams.set("subject", filters.subject);
+        if (filters.subjects) queryParams.set("subjects", filters.subjects);
         if (filters.jobType) queryParams.set("jobType", filters.jobType);
 
         return {

@@ -70,7 +70,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
     name: "",
     email: "",
     password: "",
-    subject: "",
+    subjects: [] as string[],
     assignedWorks: [] as string[],
   });
 
@@ -91,7 +91,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
     });
   };
 
-  const handleSelectChange = (e: SelectChangeEvent, field: string) => {
+  const handleSelectChange = (e: SelectChangeEvent<any>, field: string) => {
     setFormData({
       ...formData,
       [field]: e.target.value,
@@ -130,7 +130,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
         name: "",
         email: "",
         password: "",
-        subject: "",
+        subjects: [],
         assignedWorks: [],
       });
       setErrors({ email: "", password: "" });
@@ -223,16 +223,20 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
         </Typography>
         <Select
           fullWidth
-          value={formData.subject}
-          onChange={(e) => handleSelectChange(e, "subject")}
+          multiple
+          name="subjects"
+          value={formData.subjects}
+          onChange={(e) => handleSelectChange(e as SelectChangeEvent<string[]>, "subjects")}
+          sx={selectStyles}
           displayEmpty
-          sx={selectStyles}>
-          <MenuItem value="" disabled>
-            Select Subject
-          </MenuItem>
-          {subjects?.data.map((subject, index) => (
+          renderValue={(selected) => (
+            (selected as string[]).length === 0 ? "Select Subject" : (selected as string[]).join(", ")
+          )}
+        >
+          {subjects?.data.map((subject: string, index: number) => (
             <MenuItem key={index} value={subject}>
-              {subject}
+              <Checkbox checked={formData.subjects.includes(subject)} />
+              <ListItemText primary={subject} />
             </MenuItem>
           ))}
         </Select>

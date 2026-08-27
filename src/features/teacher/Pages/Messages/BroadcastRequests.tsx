@@ -24,8 +24,11 @@ const BroadcastRequests = () => {
     const [actionType, setActionType] = useState<'accept' | 'decline'>('accept');
 
     const filteredBroadcasts = pendingBroadcasts.filter(broadcast => {
-        if (teacherProfile?.data?.subject && broadcast.subject) {
-            return teacherProfile.data.subject.toLowerCase() === broadcast.subject.toLowerCase();
+        const teacherSubjects: string[] = teacherProfile?.data?.subjects || [];
+        if (teacherSubjects.length > 0 && broadcast.subject) {
+            return teacherSubjects.some(
+                (s: string) => s.toLowerCase() === broadcast.subject.toLowerCase()
+            );
         }
         return false;
     });

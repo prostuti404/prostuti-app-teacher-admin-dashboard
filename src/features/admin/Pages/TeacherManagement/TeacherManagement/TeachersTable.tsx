@@ -11,10 +11,10 @@ import { Link } from "react-router-dom";
 import { useGetAllTeacherQuery } from "../../../../../redux/features/teacherManagement/teacherManagementApi";
 import Loader from "../../../../../shared/components/Loader";
 
-const TeachersTable = ({ searchTerm, subject, category }) => {
+const TeachersTable = ({ searchTerm, subjects, category }) => {
   const { data, isLoading } = useGetAllTeacherQuery({
     searchTerm,
-    subject,
+    subjects,
     jobType: category,
   });
 
@@ -46,7 +46,7 @@ const TeachersTable = ({ searchTerm, subject, category }) => {
               <TableCell>{`${index + 1}.`}</TableCell>
               <TableCell>{teacher.name || "N/A"}</TableCell>
               <TableCell>{teacher.teacherId}</TableCell>
-              <TableCell>{teacher.subject || "N/A"}</TableCell>
+              <TableCell>{teacher.subjects?.join(", ") || "N/A"}</TableCell>
               <TableCell>{teacher.jobType || "N/A"}</TableCell>
               <TableCell>
                 <Link to={`profile/${teacher.teacherId}`}>

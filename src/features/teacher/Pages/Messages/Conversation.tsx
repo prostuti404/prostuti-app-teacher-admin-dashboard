@@ -46,7 +46,7 @@ const Conversations = () => {
                     {conversations.map((conversation) => {
                         const unreadCount = unreadCounts[conversation.conversation_id] || 0;
                         const isActive = activeConversationId === conversation.conversation_id;
-                        const isResolved = conversation.lastMessage.message === RESOLVED_MESSAGE;
+                        const isResolved = conversation.lastMessage?.message === RESOLVED_MESSAGE;
 
                         return (
                             <ListItem

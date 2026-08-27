@@ -76,7 +76,7 @@ const Profile = () => {
     const [profileData, setProfileData] = useState({
         name: "",
         phone: "",
-        subject: "",
+        subjects: [] as string[],
         jobType: "",
         email: "",
         password: "",
@@ -106,7 +106,7 @@ const Profile = () => {
     console.log("fetched profile data", fetchedProfileData.data);
 
     // extracting teacher data from backend
-    const { teacherId, email, joinedDate, name, phone, subject, assignedWorks } = fetchedProfileData?.data || [];
+    const { teacherId, email, joinedDate, name, phone, subjects, assignedWorks } = fetchedProfileData?.data || [];
 
     // form data handler
     //^ handling non file form data
@@ -139,7 +139,7 @@ const Profile = () => {
             JSON.stringify({
                 ...(profileData.name && { name: profileData.name }),
                 ...(profileData.phone && { phone: profileData.phone }),
-                ...(profileData.subject && { subject: profileData.subject }),
+                ...(profileData.subjects && profileData.subjects.length > 0 && { subjects: profileData.subjects }),
                 ...(profileData.jobType && { jobType: profileData.jobType }),
             })
         );
@@ -282,10 +282,11 @@ const Profile = () => {
                                 <Grid size={6}>
                                     <CustomLabel fieldName="Subject" />
                                     <CustomTextField
-                                        value={subject || profileData.subject}
-                                        name="subject"
-                                        placeholder={subject || ""}
+                                        value={subjects?.join(", ") || profileData.subjects?.join(", ")}
+                                        name="subjects"
+                                        placeholder={subjects?.join(", ") || ""}
                                         handleInput={handleInput}
+                                        disabled={true}
                                     />
                                 </Grid>
                                 <Grid size={6}>

@@ -34,7 +34,7 @@ const selectStyles = {
   },
 };
 
-const SearchBarWithFilter = ({ setSearchTerm, setSubject, setCategory }) => {
+const SearchBarWithFilter = ({ setSearchTerm, setSubjects, setCategory }) => {
   const [open, setOpen] = useState(false);
   // Fetch Category and Subject Data
   const { data: categories } = useGetAllCategoryTypesQuery({});
@@ -46,7 +46,7 @@ const SearchBarWithFilter = ({ setSearchTerm, setSubject, setCategory }) => {
 
   // Handle Filter
   const handleSearch = () => {
-    setSubject(fetchedSubject);
+    setSubjects(fetchedSubject);
     setCategory(fetchedcategory);
 
     setOpen(false);

@@ -220,8 +220,8 @@ const TeacherProfile = () => {
               <Grid size={6}>
                 <CustomLabel fieldName="Subject" />
                 <CustomTextField
-                  name="subject"
-                  placeholder={teacher?.subject || ""}
+                  name="subjects"
+                  placeholder={teacher?.subjects?.join(", ") || ""}
                   disabled
                 />
               </Grid>
