@@ -43,7 +43,7 @@ const AnswerSheet = () => {
         if (isSuccess) {
             setAlertMessage({
                 type: 'success',
-                message: 'Marking successfully submitted!'
+                message: 'Marking submitted successfully',
             });
             setShowAlert(true);
         } else if (isError) {

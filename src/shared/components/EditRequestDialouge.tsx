@@ -107,7 +107,7 @@ const EditRequestDialog: React.FC<EditRequestDialogProps> = ({
         >
             <DialogTitle>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">Request Edit</Typography>
+                    <Typography variant="h6">Edit Request</Typography>
                     <IconButton onClick={onClose} edge="end">
                         <CloseIcon />
                     </IconButton>

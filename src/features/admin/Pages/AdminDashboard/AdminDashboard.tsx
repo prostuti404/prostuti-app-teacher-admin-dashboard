@@ -4,7 +4,7 @@ import EngagementChart from "./EngagementChart";
 import FlashcardUsageChart from "./FlashCardUsageChart";
 import PracticeTestStats from "./PracticeTestChart";
 import SalesChart from "./SalesChart";
-import SalesSummary from "./SalesSummery";
+import SalesSummary from "./SalesSummary";
 import TopSellingCourses from "./TopSellingCourse.";
 
 const AdminDashboard = () => {

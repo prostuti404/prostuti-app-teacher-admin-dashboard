@@ -81,7 +81,7 @@ const TeacherProfile = () => {
         data,
       }).unwrap();
 
-      toast.success("Assigned Works Updated Successfully");
+      toast.success("Assigned works updated successfully");
     } catch (error) {
       console.error("Failed to update assigned works:", error);
       toast.error(getErrorMessage(error, "Failed to update assigned works"));

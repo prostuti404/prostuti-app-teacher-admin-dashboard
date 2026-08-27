@@ -212,7 +212,7 @@ const EditRequestModal = ({ open, onClose, resourceType, resourceId: propResourc
                         </Box>
                     </Box>
                     <Typography variant="h6" id="success-dialog-description">
-                        Request Sent Successfully
+                        Edit request sent successfully
                     </Typography>
                 </Box>
             </Dialog>

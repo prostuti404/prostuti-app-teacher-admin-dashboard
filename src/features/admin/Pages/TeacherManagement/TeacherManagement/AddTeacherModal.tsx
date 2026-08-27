@@ -123,7 +123,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
 
     try {
       await createTeacher(formData).unwrap();
-      toast.success("Teacher Created Successfully");
+      toast.success("Teacher created successfully");
 
       onClose();
       setFormData({
