@@ -46,12 +46,8 @@ const validationSchema = z.object({
   email: z.string().email("Invalid email format"),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters long")
-    .max(20, "Password must not exceed 20 characters")
-    .regex(
-      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/,
-      "Password must contain at least one uppercase letter, one number, and one special character"
-    ),
+    .min(6, "Password must be at least 6 characters long")
+    .max(20, "Password must not exceed 20 characters"),
 });
 
 interface AddTeacherModalProps {
