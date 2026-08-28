@@ -29,6 +29,7 @@ import FlashCard from "../features/teacher/Pages/Flashcard/FlashCard";
 import ChildFlashCards from "../features/teacher/Pages/Flashcard/ChildFlashCards";
 import PracticeTestCreation from "../features/admin/Pages/PracticeTestCreation.tsx";
 import SingleQuestionPattern from "../features/admin/Pages/SingleQuestionPattern.tsx";
+import StudentManagement from "../features/admin/Pages/StudentManagement/StudentManagement";
 
 export const adminRoutes = [
   {
@@ -170,5 +171,9 @@ export const adminRoutes = [
   {
     path: "practice-test-creation",
     element: <PracticeTestCreation />,
+  },
+  {
+    path: "student-management",
+    element: <StudentManagement />,
   },
 ];

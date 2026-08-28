@@ -49,6 +49,11 @@ const adminDashboardMenus = [
     icon: <TeacherManagementIcon />,
   },
   {
+    path: '/admin/student-management',
+    name: 'Student Management',
+    icon: <TeacherManagementIcon />,
+  },
+  {
     path: '/admin/practice-test',
     name: 'Practice Test',
     icon: <PracticeTestIcon />,
