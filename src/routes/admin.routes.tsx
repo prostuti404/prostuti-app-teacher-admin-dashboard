@@ -30,6 +30,7 @@ import ChildFlashCards from "../features/teacher/Pages/Flashcard/ChildFlashCards
 import PracticeTestCreation from "../features/admin/Pages/PracticeTestCreation.tsx";
 import SingleQuestionPattern from "../features/admin/Pages/SingleQuestionPattern.tsx";
 import StudentManagement from "../features/admin/Pages/StudentManagement/StudentManagement";
+import PreSubscriptionSetup from "../features/admin/Pages/PreSubscriptionSetup/PreSubscriptionSetup";
 
 export const adminRoutes = [
   {
@@ -175,5 +176,9 @@ export const adminRoutes = [
   {
     path: "student-management",
     element: <StudentManagement />,
+  },
+  {
+    path: "pre-subscription-setup",
+    element: <PreSubscriptionSetup />,
   },
 ];

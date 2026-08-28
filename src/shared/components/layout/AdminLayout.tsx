@@ -64,6 +64,11 @@ const adminDashboardMenus = [
     icon: <PaymentManagement />,
   },
   {
+    path: '/admin/pre-subscription-setup',
+    name: 'Pre-Subscription Setup',
+    icon: <CourseManagementIcon />,
+  },
+  {
     path: '/admin/coupon-management',
     name: 'Coupon Management',
     icon: <PaymentManagement />,
