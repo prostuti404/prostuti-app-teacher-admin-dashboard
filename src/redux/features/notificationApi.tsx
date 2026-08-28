@@ -88,6 +88,16 @@ const notificationApi = baseApi.injectEndpoints({
             },
             providesTags: ['EditRequests']
         }),
+
+        // Send bulk notification (Admin only)
+        sendBulkNotification: builder.mutation({
+            query: (payload) => ({
+                url: '/notifications/send-bulk',
+                method: 'POST',
+                body: payload,
+            }),
+            invalidatesTags: ['Notifications'],
+        }),
     }),
 });
 
@@ -97,5 +107,6 @@ export const {
     useMarkNotificationAsReadMutation,
     useMarkAllNotificationsAsReadMutation,
     useRequestEditMutation,
-    useGetMyEditRequestsQuery
+    useGetMyEditRequestsQuery,
+    useSendBulkNotificationMutation
 } = notificationApi;

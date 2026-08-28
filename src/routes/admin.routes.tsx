@@ -31,6 +31,7 @@ import PracticeTestCreation from "../features/admin/Pages/PracticeTestCreation.t
 import SingleQuestionPattern from "../features/admin/Pages/SingleQuestionPattern.tsx";
 import StudentManagement from "../features/admin/Pages/StudentManagement/StudentManagement";
 import PreSubscriptionSetup from "../features/admin/Pages/PreSubscriptionSetup/PreSubscriptionSetup";
+import NotificationManagement from "../features/admin/Pages/NotificationManagement/NotificationManagement";
 
 export const adminRoutes = [
   {
@@ -180,5 +181,9 @@ export const adminRoutes = [
   {
     path: "pre-subscription-setup",
     element: <PreSubscriptionSetup />,
+  },
+  {
+    path: "notification-management",
+    element: <NotificationManagement />,
   },
 ];

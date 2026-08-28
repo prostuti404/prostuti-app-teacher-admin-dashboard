@@ -22,7 +22,8 @@ import RevenueManagementIcon from '../../../assets/Dashboard-SVGs/revenueManagem
 import ReportComplianceIcon from '../../../assets/Dashboard-SVGs/reportCompliance.svg?react';
 import { useAppDispatch } from '../../../redux/hooks';
 import { logout } from '../../../redux/features/auth/authSlice';
-import NotificationIcon from '../NotificationIcon';
+import NotificationIconComponent from '../NotificationIcon';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationDrawer from '../NotificationDrawer';
 import AdminDashboard from '../../../features/admin/Pages/AdminDashboard/AdminDashboard';
 
@@ -62,6 +63,11 @@ const adminDashboardMenus = [
     path: '/admin/payment-management',
     name: 'Payment Management',
     icon: <PaymentManagement />,
+  },
+  {
+    path: '/admin/notification-management',
+    name: 'Notification Management',
+    icon: <NotificationsIcon />,
   },
   {
     path: '/admin/pre-subscription-setup',
@@ -117,7 +123,7 @@ export const AdminLayout = () => {
           }}
         >
           {/* Add notification icon to toolbar */}
-          <NotificationIcon />
+          <NotificationIconComponent />
         </Toolbar>
       </AppBar>
       {/* sidebar starts */}
