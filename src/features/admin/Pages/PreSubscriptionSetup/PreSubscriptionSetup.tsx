@@ -37,6 +37,7 @@ const PreSubscriptionSetup = () => {
   const [freeTrialDays, setFreeTrialDays] = useState(7);
   const [freeAccessFeatures, setFreeAccessFeatures] = useState<string[]>([]);
   const [featureLimits, setFeatureLimits] = useState<Record<string, number>>({});
+  const [supportMobileNumber, setSupportMobileNumber] = useState("");
 
   useEffect(() => {
     if (data?.data) {
@@ -44,6 +45,7 @@ const PreSubscriptionSetup = () => {
       setFreeTrialDays(data.data.freeTrialDays);
       setFreeAccessFeatures(data.data.freeAccessFeatures || []);
       setFeatureLimits(data.data.featureLimits || {});
+      setSupportMobileNumber(data.data.supportMobileNumber || "");
     }
   }, [data]);
 
@@ -70,6 +72,7 @@ const PreSubscriptionSetup = () => {
         freeTrialDays,
         freeAccessFeatures,
         featureLimits,
+        supportMobileNumber,
       }).unwrap();
       toast.success("App configuration updated successfully");
     } catch (error) {
@@ -89,10 +92,28 @@ const PreSubscriptionSetup = () => {
     <Box sx={{ width: "100%", height: "100vh" }}>
       <Paper variant="outlined" sx={{ width: "100%", minHeight: "100vh", borderRadius: "10px", p: 4 }}>
         <Typography variant="h3" sx={{ mb: 4 }}>
-          Pre-Subscription Setup
+          App Configuration
         </Typography>
 
         <Box sx={{ maxWidth: 600 }}>
+          {/* Support Mobile Number */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Customer Support:
+            </Typography>
+            <TextField
+              label="Support Mobile Number"
+              variant="outlined"
+              fullWidth
+              value={supportMobileNumber}
+              onChange={(e) => setSupportMobileNumber(e.target.value)}
+              placeholder="e.g. +8801XXXXXXXXX"
+            />
+          </Box>
+
+          <Typography variant="h5" sx={{ mb: 3, mt: 4 }}>
+            Pre-Subscription Trial Settings
+          </Typography>
           {/* Trial Toggle */}
           <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 2 }}>
             <Typography variant="h6">Enable Free Trial:</Typography>

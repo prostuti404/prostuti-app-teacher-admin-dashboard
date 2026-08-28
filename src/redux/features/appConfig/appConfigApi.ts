@@ -5,6 +5,7 @@ interface AppConfig {
     freeTrialDays: number;
     freeAccessFeatures: string[];
     featureLimits: Record<string, number>;
+    supportMobileNumber?: string;
 }
 
 const appConfigApi = baseApi.injectEndpoints({
