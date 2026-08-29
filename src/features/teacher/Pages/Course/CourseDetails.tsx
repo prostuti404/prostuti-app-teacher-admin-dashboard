@@ -195,7 +195,12 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
     };
 
     const handleCategory = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
+        let { name, value } = e.target;
+
+        // Map 'Combined / All Categories' back to 'Common' for backend
+        if (name === 'division' && value === 'Combined / All Categories') {
+            value = 'Common';
+        }
 
         // Create updated state with the new value
         const updatedCategoryParams = {
@@ -372,11 +377,11 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                         <Grid size={4}>
                                             <CustomLabel fieldName="Division*" />
                                             <CustomAutoComplete
-                                                options={divisions || []}
+                                                options={divisions?.map(d => d === 'Common' ? 'Combined / All Categories' : d) || []}
                                                 name={`division`}
                                                 handleInput={handleCategory}
                                                 required={true}
-                                                value={categoryParams.division}
+                                                value={categoryParams.division === 'Common' ? 'Combined / All Categories' : categoryParams.division}
                                             />
                                         </Grid>
                                         {categoryParams.division && (
