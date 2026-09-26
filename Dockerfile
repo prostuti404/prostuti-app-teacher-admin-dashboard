@@ -20,6 +20,10 @@ RUN npm install
 # Copy local code to the container image
 COPY . ./
 
+# Accept environment variables from Railway during Docker build
+ARG VITE_BASE_URL
+ENV VITE_BASE_URL=$VITE_BASE_URL
+
 # Modified build command to bypass TypeScript errors
 # This overrides the build script in package.json
 RUN npx tsc --skipLibCheck --noEmit && npx vite build
