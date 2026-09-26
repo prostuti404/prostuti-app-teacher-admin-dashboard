@@ -11,6 +11,11 @@ import {
   TableHead,
   TableRow,
   Typography,
+  Chip,
+  Avatar,
+  Stack,
+  IconButton,
+  Tooltip
 } from "@mui/material";
 import { useGetAllTeacherQuery, useDeleteTeacherMutation } from "../../../../redux/features/teacherManagement/teacherManagementApi";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -59,43 +64,75 @@ const TeachersList = () => {
         <Typography variant="h6">Teachers</Typography>
         <Button variant="contained" color="primary" onClick={() => setModalOpen(true)}>Add New Teacher</Button>
       </Box>
-      <TableContainer component={Paper} variant="outlined">
-        <Table>
-          <TableHead>
+      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E0E0E0', borderRadius: 2 }}>
+        <Table sx={{ minWidth: 650 }} aria-label="teachers table">
+          <TableHead sx={{ backgroundColor: '#F9FAFB' }}>
             <TableRow>
-              <TableCell><strong>ID</strong></TableCell>
-              <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>Email</strong></TableCell>
-              <TableCell><strong>Phone</strong></TableCell>
-              <TableCell align="right"><strong>Actions</strong></TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#6B7280' }}>Teacher Info</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#6B7280' }}>Contact</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#6B7280' }}>Role</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600, color: '#6B7280' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {teachers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">No teachers found</TableCell>
+                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">No teachers found</Typography>
+                </TableCell>
               </TableRow>
             ) : (
-              teachers.map((teacher: any) => (
-                <TableRow key={teacher._id}>
-                  <TableCell>{teacher.teacherId}</TableCell>
-                  <TableCell>{teacher.name}</TableCell>
-                  <TableCell>{teacher.email}</TableCell>
-                  <TableCell>{teacher.phone}</TableCell>
-                  <TableCell align="right">
-                    <Button 
-                      variant="outlined" 
-                      color="error" 
-                      size="small" 
-                      startIcon={<DeleteIcon />}
-                      onClick={() => handleDelete(teacher._id)}
-                      disabled={isDeleting}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              teachers.map((teacher: any) => {
+                const isSuperAdmin = teacher.user_id?.isSuperAdmin;
+                return (
+                  <TableRow 
+                    key={teacher._id}
+                    sx={{ 
+                      '&:last-child td, &:last-child th': { border: 0 },
+                      backgroundColor: isSuperAdmin ? 'rgba(216, 180, 254, 0.15)' : 'inherit',
+                      transition: 'background-color 0.2s',
+                      '&:hover': { backgroundColor: isSuperAdmin ? 'rgba(216, 180, 254, 0.25)' : '#F9FAFB' }
+                    }}
+                  >
+                    <TableCell>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar sx={{ bgcolor: isSuperAdmin ? '#9333EA' : '#10B981', width: 40, height: 40 }}>
+                          {teacher.name?.charAt(0)?.toUpperCase() || 'T'}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{teacher.name || 'Unnamed Teacher'}</Typography>
+                          <Typography variant="caption" color="text.secondary">ID: {teacher.teacherId}</Typography>
+                        </Box>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{teacher.email}</Typography>
+                      <Typography variant="caption" color="text.secondary">{teacher.phone || 'No phone provided'}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      {isSuperAdmin ? (
+                        <Chip label="Super Admin" size="small" sx={{ backgroundColor: '#9333EA', color: 'white', fontWeight: 600 }} />
+                      ) : (
+                        <Chip label="Teacher" size="small" sx={{ color: '#059669', borderColor: '#34D399', backgroundColor: 'rgba(52, 211, 153, 0.1)' }} variant="outlined" />
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title={isSuperAdmin ? "Cannot delete a Super Admin" : "Delete Teacher"}>
+                        <span>
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDelete(teacher._id)}
+                            disabled={isDeleting || isSuperAdmin}
+                            sx={{ opacity: isSuperAdmin ? 0.5 : 1 }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

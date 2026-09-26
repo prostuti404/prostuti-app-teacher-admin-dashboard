@@ -19,9 +19,11 @@ const Error = ({ err }: { err: TLoginError; }) => {
                 message: 'Server is not responding. Please check your internet connection or wait a moment.'
             };
         } else {
+            const data = error?.data as any;
+            const detailedMessage = data?.errorSources?.[0]?.message;
             return {
                 status: error?.status,
-                message: error?.data.message
+                message: detailedMessage || data?.message || "Unknown error occurred"
             };
         }
     };

@@ -11,6 +11,11 @@ import {
   TableHead,
   TableRow,
   Typography,
+  Chip,
+  Avatar,
+  Stack,
+  IconButton,
+  Tooltip
 } from "@mui/material";
 import { useGetAllAdminsQuery, useDeleteAdminMutation } from "../../../../redux/features/userManagement/userManagementApi";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -59,43 +64,75 @@ const AdminsList = () => {
         <Typography variant="h6">Admins</Typography>
         <Button variant="contained" color="primary" onClick={() => setModalOpen(true)}>Add New Admin</Button>
       </Box>
-      <TableContainer component={Paper} variant="outlined">
-        <Table>
-          <TableHead>
+      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E0E0E0', borderRadius: 2 }}>
+        <Table sx={{ minWidth: 650 }} aria-label="admins table">
+          <TableHead sx={{ backgroundColor: '#F9FAFB' }}>
             <TableRow>
-              <TableCell><strong>ID</strong></TableCell>
-              <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>Email</strong></TableCell>
-              <TableCell><strong>Phone</strong></TableCell>
-              <TableCell align="right"><strong>Actions</strong></TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#6B7280' }}>Admin Info</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#6B7280' }}>Contact</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#6B7280' }}>Role</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600, color: '#6B7280' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {admins.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">No admins found</TableCell>
+                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">No admins found</Typography>
+                </TableCell>
               </TableRow>
             ) : (
-              admins.map((admin: any) => (
-                <TableRow key={admin._id}>
-                  <TableCell>{admin.adminId}</TableCell>
-                  <TableCell>{admin.name}</TableCell>
-                  <TableCell>{admin.email}</TableCell>
-                  <TableCell>{admin.phone}</TableCell>
-                  <TableCell align="right">
-                    <Button 
-                      variant="outlined" 
-                      color="error" 
-                      size="small" 
-                      startIcon={<DeleteIcon />}
-                      onClick={() => handleDelete(admin._id)}
-                      disabled={isDeleting}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              admins.map((admin: any) => {
+                const isSuperAdmin = admin.user_id?.isSuperAdmin;
+                return (
+                  <TableRow 
+                    key={admin._id}
+                    sx={{ 
+                      '&:last-child td, &:last-child th': { border: 0 },
+                      backgroundColor: isSuperAdmin ? 'rgba(216, 180, 254, 0.15)' : 'inherit',
+                      transition: 'background-color 0.2s',
+                      '&:hover': { backgroundColor: isSuperAdmin ? 'rgba(216, 180, 254, 0.25)' : '#F9FAFB' }
+                    }}
+                  >
+                    <TableCell>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar sx={{ bgcolor: isSuperAdmin ? '#9333EA' : '#1976d2', width: 40, height: 40 }}>
+                          {admin.name?.charAt(0)?.toUpperCase() || 'A'}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{admin.name || 'Unnamed Admin'}</Typography>
+                          <Typography variant="caption" color="text.secondary">ID: {admin.adminId}</Typography>
+                        </Box>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{admin.email}</Typography>
+                      <Typography variant="caption" color="text.secondary">{admin.phone || 'No phone provided'}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      {isSuperAdmin ? (
+                        <Chip label="Super Admin" size="small" sx={{ backgroundColor: '#9333EA', color: 'white', fontWeight: 600 }} />
+                      ) : (
+                        <Chip label="Admin" size="small" color="primary" variant="outlined" />
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title={isSuperAdmin ? "Cannot delete a Super Admin" : "Delete Admin"}>
+                        <span>
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDelete(admin._id)}
+                            disabled={isDeleting || isSuperAdmin}
+                            sx={{ opacity: isSuperAdmin ? 0.5 : 1 }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
