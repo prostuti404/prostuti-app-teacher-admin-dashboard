@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Box, Button, Checkbox, CircularProgress, FormControlLabel, InputLabel, TextField, Typography } from "@mui/material";
+import { Box, Button, Checkbox, CircularProgress, FormControlLabel, InputLabel, TextField, Typography, InputAdornment, IconButton } from "@mui/material";
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import ProstutiLogo from "../../assets/Dashboard-SVGs/ProstutiLogo";
 import Grid from '@mui/material/Grid2';
 import { useEffect, useState } from "react";
@@ -26,6 +28,7 @@ const Login = () => {
         password: '',
         rememberMe: ''
     });
+    const [showPassword, setShowPassword] = useState(false);
 
     //* below useEffect hook lets the user enter if they are previously logged in
     useEffect(() => {
@@ -141,9 +144,22 @@ const Login = () => {
                                         name='password'
                                         onChange={handleChange}
                                         placeholder="Enter your password"
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         size="small"
                                         fullWidth
+                                        InputProps={{
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <IconButton
+                                                        aria-label="toggle password visibility"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        edge="end"
+                                                    >
+                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            )
+                                        }}
                                     />
                                 </Grid>
                                 <Grid size={7}>

@@ -63,6 +63,15 @@ const teacherManagementAPI = baseApi.injectEndpoints({
       },
     }),
 
+    // Delete Teacher
+    deleteTeacher: builder.mutation({
+      query: (id) => ({
+        url: `/teacher-management/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Teacher-Management"],
+    }),
+
     // ***
   }),
 });
@@ -73,4 +82,5 @@ export const {
   useGetAllCategorySubjectsQuery,
   useCreateTeacherMutation,
   useUpdateTeacherAssignedWorksMutation,
+  useDeleteTeacherMutation,
 } = teacherManagementAPI;

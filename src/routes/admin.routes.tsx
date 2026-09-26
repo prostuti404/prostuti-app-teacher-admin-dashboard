@@ -32,6 +32,7 @@ import SingleQuestionPattern from "../features/admin/Pages/SingleQuestionPattern
 import StudentManagement from "../features/admin/Pages/StudentManagement/StudentManagement";
 import PreSubscriptionSetup from "../features/admin/Pages/PreSubscriptionSetup/PreSubscriptionSetup";
 import NotificationManagement from "../features/admin/Pages/NotificationManagement/NotificationManagement";
+import UsersManagement from "../features/admin/Pages/UsersManagement/UsersManagement";
 
 export const adminRoutes = [
   {
@@ -185,5 +186,9 @@ export const adminRoutes = [
   {
     path: "notification-management",
     element: <NotificationManagement />,
+  },
+  {
+    path: "users-management",
+    element: <UsersManagement />,
   },
 ];

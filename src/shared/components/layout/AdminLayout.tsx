@@ -20,7 +20,8 @@ import PracticeTestIcon from '../../../assets/Dashboard-SVGs/practiceTest.svg?re
 import PaymentManagement from '../../../assets/Dashboard-SVGs/paymentManagement.svg?react';
 import RevenueManagementIcon from '../../../assets/Dashboard-SVGs/revenueManagement.svg?react';
 import ReportComplianceIcon from '../../../assets/Dashboard-SVGs/reportCompliance.svg?react';
-import { useAppDispatch } from '../../../redux/hooks';
+import UsersManagementIcon from '@mui/icons-material/PeopleAlt';
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { logout } from '../../../redux/features/auth/authSlice';
 import NotificationIconComponent from '../NotificationIcon';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -99,6 +100,18 @@ const adminDashboardMenus = [
 export const AdminLayout = () => {
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const user: any = useAppSelector((state) => state.auth.user);
+
+  const menusToRender = user?.isSuperAdmin
+    ? [
+        ...adminDashboardMenus,
+        {
+          path: '/admin/users-management',
+          name: 'Users Management',
+          icon: <UsersManagementIcon />,
+        },
+      ]
+    : adminDashboardMenus;
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -148,7 +161,7 @@ export const AdminLayout = () => {
         {/* logo end */}
         {/* sidebar menu start */}
         <List sx={{ ml: 2 }}>
-          {adminDashboardMenus.map((item, index) => (
+          {menusToRender.map((item, index) => (
             <ListItem key={index} disablePadding>
               {/* navlink comes from react router dom */}
               <NavLink

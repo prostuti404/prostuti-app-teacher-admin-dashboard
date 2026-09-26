@@ -91,7 +91,8 @@ export const baseApi = createApi({
     "QuestionPatterns",
     "Routine",
     "Students",
-    "AppConfig"
+    "AppConfig",
+    "Admins"
   ],
   endpoints: () => ({}),
 });
