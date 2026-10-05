@@ -41,19 +41,13 @@ export interface TNetworkError {
 }
 
 export interface ICategory {
-    subject: string;
+    _id: string;
+    group: string;
     type: string;
-    universityType?: string;
-    universityName?: string;
-    unit?: string;
-    jobType?: string;
-    jobName?: string;
+    name: string;
+    createdAt?: string;
     updatedAt?: string;
     __v?: number;
-    _id: string;
-    createdAt?: string;
-    chapter: string;
-    division: string;
 }
 
 export interface CourseState {
@@ -74,12 +68,9 @@ export interface CourseState {
 
 export interface ISingleCategory {
     _id: string;
+    group: string;
     type: string;
-    subject?: string;
-    division?: string;
-    chapter?: string;
-    universityType?: string;
-    universityName?: string;
+    name: string;
     createdAt?: string;
     updatedAt?: string;
     __v?: number;

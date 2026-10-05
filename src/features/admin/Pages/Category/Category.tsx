@@ -1,107 +1,78 @@
 import {
   Box,
   Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
   Paper,
-  Typography,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
-  CircularProgress,
+  Typography,
   Pagination,
-  Stack,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
+  Chip
 } from "@mui/material";
-import { Link } from "react-router-dom";
-import {
-  useGetAllCategoriesQuery,
-  useGetAllCategoryTypesQuery,
-  useUpdateCategoryMutation,
-  useDeleteCategoryMutation
-} from "../../../../redux/features/category/categoryApi";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import {
+  useDeleteCategoryMutation,
+  useGetAllCategoriesQuery,
+  useUpdateCategoryMutation,
+} from "../../../../redux/features/category/categoryApi";
+import { ICategory } from "../../../../interface/category.interface";
 import toast from "react-hot-toast";
-import { getErrorMessage } from "../../../../utils/getErrorMessage";
 
 const Category = () => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const [limit] = useState(0);
+  const limit = 10;
+  
+  // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState<ICategory | null>(null);
+  
+  // Edit form state
   const [editFormValues, setEditFormValues] = useState({
-    subject: "",
+    group: "",
     type: "",
-    division: "",
-    chapter: "",
-    lesson: "",
-    universityName: "",
-    universityType: "",
-    unit: "",
-    jobType: "",
-    jobName: ""
+    name: "",
   });
-  const [originalValues, setOriginalValues] = useState({});
-  const [searchTerm, setSearchTerm] = useState("");
 
-  // Track university type for conditionally showing unit field
-  const [showUnitField, setShowUnitField] = useState(false);
+  const { data: categoriesData, isLoading } = useGetAllCategoriesQuery({
+    page,
+    limit,
+  });
 
-  // Get all categories with pagination
-  const { data: categoriesData, isLoading, isFetching } = useGetAllCategoriesQuery({ page, limit });
-
-  // Get category types
-  const { data: categoryTypes } = useGetAllCategoryTypesQuery({});
-
-  // Update and delete mutations
   const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
 
-  // For dropdowns
-  const divisions = ['Science', 'Arts', 'Commerce'];
-  const universityTypes = ['Engineering', 'Medical', 'University'];
-
-  const handlePageChange = (event, value) => {
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
   };
 
-  const handleEditClick = (category) => {
+  const handleEditClick = (category: ICategory) => {
     setSelectedCategory(category);
-    // Store original values for comparison
-    const values = {
-      subject: category.subject || "",
+    setEditFormValues({
+      group: category.group || "",
       type: category.type || "",
-      division: category.division || "",
-      chapter: category.chapter || "",
-      lesson: category.lesson || "",
-      universityName: category.universityName || "",
-      universityType: category.universityType || "",
-      unit: category.unit || "",
-      jobType: category.jobType || "",
-      jobName: category.jobName || ""
-    };
-    setEditFormValues(values);
-    setOriginalValues(values);
-    // Set unit field visibility based on universityType
-    setShowUnitField(category.universityType === "University");
+      name: category.name || "",
+    });
     setEditDialogOpen(true);
   };
 
-  const handleDeleteClick = (category) => {
+  const handleDeleteClick = (category: ICategory) => {
     setSelectedCategory(category);
     setDeleteDialogOpen(true);
   };
@@ -116,181 +87,127 @@ const Category = () => {
     setSelectedCategory(null);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditFormValues((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-
-    // Update showUnitField when universityType changes
-    if (name === "universityType") {
-      setShowUnitField(value === "University");
-    }
   };
 
   const handleUpdateCategory = async () => {
-    // Create dynamic update body with only changed fields
-    const updateBody = {};
-
-    // Compare each field with original values and include only changed ones
-    Object.keys(editFormValues).forEach(key => {
-      if (editFormValues[key] !== originalValues[key] && editFormValues[key] !== "") {
-        updateBody[key] = editFormValues[key];
-      }
-    });
-
-    // Only proceed if there are changes
-    if (Object.keys(updateBody).length === 0) {
-      setEditDialogOpen(false);
-      return;
-    }
+    if (!selectedCategory?._id) return;
 
     try {
       await updateCategory({
         id: selectedCategory._id,
-        body: updateBody
+        data: editFormValues,
       }).unwrap();
-      setEditDialogOpen(false);
+      toast.success("Category updated successfully");
+      handleEditDialogClose();
     } catch (error) {
-      console.error("Failed to update category:", error);
-      toast.error(getErrorMessage(error, "Failed to update category"));
+      console.error(error);
+      toast.error("Failed to update category");
     }
   };
 
   const handleDeleteCategory = async () => {
+    if (!selectedCategory?._id) return;
+
     try {
       await deleteCategory(selectedCategory._id).unwrap();
-      setDeleteDialogOpen(false);
+      toast.success("Category deleted successfully");
+      handleDeleteDialogClose();
     } catch (error) {
-      console.error("Failed to delete category:", error);
-      toast.error(getErrorMessage(error, "Failed to delete category"));
-    }
-  };
-
-  const renderCategoryCell = (category) => {
-    switch (category.type) {
-      case "Academic":
-        return (
-          <>
-            <Box sx={{ mb: 1 }}>
-              <Chip size="small" color="primary" label={category.type} sx={{ mr: 1 }} />
-              {category.division && <Chip size="small" color="secondary" label={category.division} />}
-            </Box>
-            <Typography variant="body1">{category.subject}</Typography>
-            {category.chapter && <Typography variant="body2" color="textSecondary">Chapter: {category.chapter}</Typography>}
-            {category.lesson && <Typography variant="body2" color="textSecondary">Lesson: {category.lesson}</Typography>}
-          </>
-        );
-      case "Admission":
-        return (
-          <>
-            <Box sx={{ mb: 1 }}>
-              <Chip size="small" color="primary" label={category.type} sx={{ mr: 1 }} />
-              {category.universityType && <Chip size="small" color="secondary" label={category.universityType} />}
-            </Box>
-            <Typography variant="body1">{category.subject}</Typography>
-            {category.universityName && <Typography variant="body2" color="textSecondary">University: {category.universityName}</Typography>}
-            {category.unit && <Typography variant="body2" color="textSecondary">Unit: {category.unit}</Typography>}
-          </>
-        );
-      case "Job":
-        return (
-          <>
-            <Box sx={{ mb: 1 }}>
-              <Chip size="small" color="primary" label={category.type} sx={{ mr: 1 }} />
-              {category.jobType && <Chip size="small" color="secondary" label={category.jobType} />}
-            </Box>
-            <Typography variant="body1">{category.subject}</Typography>
-            {category.jobName && <Typography variant="body2" color="textSecondary">Job Name: {category.jobName}</Typography>}
-          </>
-        );
-      default:
-        return (
-          <>
-            <Box sx={{ mb: 1 }}>
-              <Chip size="small" color="primary" label={category.type || "Unknown"} />
-            </Box>
-            <Typography variant="body1">{category.subject}</Typography>
-          </>
-        );
+      console.error(error);
+      toast.error("Failed to delete category");
     }
   };
 
   return (
-    <Box sx={{ width: "100%", height: "100vh" }}>
+    <Box sx={{ width: "100%", height: "100%" }}>
       <Paper
         variant="outlined"
-        sx={{ width: "100%", height: "100vh", borderRadius: "10px", p: 3 }}
+        sx={{
+          width: "100%",
+          minHeight: "80vh",
+          borderRadius: "10px",
+          p: { xs: 2, md: 3 },
+        }}
       >
-        {/* top title and button section */}
         <Box
-          component="section"
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 3,
+            mb: 4,
           }}
         >
-          <Typography variant="h3">Category List</Typography>
-          <Link to="/admin/add-category">
-            <Button
-              variant="contained"
-              sx={{
-                width: "179px",
-                height: "48px",
-                borderRadius: "8px",
-                fontSize: "16px",
-              }}
-            >
-              + Add Category
-            </Button>
-          </Link>
+          <Typography variant="h5" component="h1" fontWeight="600">
+            Category Management
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/admin/add-category")}
+          >
+            Add Category
+          </Button>
         </Box>
 
-        <TextField
-          label="Search by Subject"
-          variant="outlined"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ width: "100%", mb: 2 }}
-        />
-
-        <Box component="section" sx={{ mt: 3, flexGrow: 1 }}>
-          {isLoading || isFetching ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+        <Box sx={{ width: "100%" }}>
+          {isLoading ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "40vh",
+              }}
+            >
               <CircularProgress />
             </Box>
           ) : (
             <>
-              <TableContainer component={Paper} elevation={0} variant="outlined">
+              <TableContainer>
                 <Table sx={{ minWidth: 650 }} aria-label="categories table">
                   <TableHead>
-                    <TableRow sx={{ backgroundColor: "rgba(0, 0, 0, 0.04)" }}>
-                      <TableCell>Category</TableCell>
-                      <TableCell>Created At</TableCell>
+                    <TableRow sx={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
+                      <TableCell>Group</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Created Date</TableCell>
                       <TableCell align="right">Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {categoriesData?.data?.filter((category) =>
-                      category.subject.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                      .map((category) => (
+                    {categoriesData?.data &&
+                      categoriesData.data.map((category: ICategory) => (
                         <TableRow
                           key={category._id}
-                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                          sx={{
+                            "&:last-child td, &:last-child th": { border: 0 },
+                            "&:hover": { backgroundColor: "rgba(0,0,0,0.01)" },
+                          }}
                         >
-                          <TableCell component="th" scope="row" sx={{ minWidth: 300 }}>
-                            {renderCategoryCell(category)}
+                          <TableCell>
+                            <Chip size="small" label={category.group} color="primary" variant="outlined" />
                           </TableCell>
                           <TableCell>
-                            {new Date(category.createdAt).toLocaleDateString('en-US', {
+                            <Chip size="small" label={category.type} color="secondary" variant="outlined" />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="medium">
+                              {category.name}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            {category.createdAt ? new Date(category.createdAt).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'short',
                               day: 'numeric'
-                            })}
+                            }) : "-"}
                           </TableCell>
                           <TableCell align="right">
                             <IconButton
@@ -310,9 +227,9 @@ const Category = () => {
                           </TableCell>
                         </TableRow>
                       ))}
-                    {categoriesData?.data?.length === 0 && (
+                    {(!categoriesData?.data || categoriesData.data.length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
+                        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
                           <Typography variant="body1" color="textSecondary">
                             No categories found
                           </Typography>
@@ -343,126 +260,30 @@ const Category = () => {
         <DialogTitle>Edit Category</DialogTitle>
         <DialogContent>
           <Box component="form" sx={{ mt: 2 }}>
-            {/* Subject is common to all category types */}
             <TextField
               fullWidth
               margin="normal"
-              label="Subject"
-              name="subject"
-              value={editFormValues.subject}
+              label="Group (e.g., Science)"
+              name="group"
+              value={editFormValues.group}
               onChange={handleInputChange}
             />
-
-            {selectedCategory?.type === "Academic" && (
-              <>
-                {/* Division as dropdown */}
-                <FormControl fullWidth margin="normal">
-                  <InputLabel id="division-select-label">Division</InputLabel>
-                  <Select
-                    labelId="division-select-label"
-                    id="division-select"
-                    name="division"
-                    value={editFormValues.division}
-                    label="Division"
-                    onChange={handleInputChange}
-                  >
-                    {divisions.map((division) => (
-                      <MenuItem key={division} value={division}>
-                        {division}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {/* Chapter as text field */}
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Chapter"
-                  name="chapter"
-                  value={editFormValues.chapter}
-                  onChange={handleInputChange}
-                />
-
-                {/* Lesson as text field */}
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Lesson"
-                  name="lesson"
-                  value={editFormValues.lesson}
-                  onChange={handleInputChange}
-                />
-              </>
-            )}
-
-            {selectedCategory?.type === "Admission" && (
-              <>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="University Name"
-                  name="universityName"
-                  value={editFormValues.universityName}
-                  onChange={handleInputChange}
-                />
-
-                {/* University Type as dropdown */}
-                <FormControl fullWidth margin="normal">
-                  <InputLabel id="university-type-select-label">University Type</InputLabel>
-                  <Select
-                    labelId="university-type-select-label"
-                    id="university-type-select"
-                    name="universityType"
-                    value={editFormValues.universityType}
-                    label="University Type"
-                    onChange={handleInputChange}
-                  >
-                    {universityTypes.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        {type}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {/* Only show Unit field if University Type is "University" */}
-                {showUnitField && (
-                  <TextField
-                    fullWidth
-                    margin="normal"
-                    label="Unit"
-                    name="unit"
-                    value={editFormValues.unit}
-                    onChange={handleInputChange}
-                  />
-                )}
-              </>
-            )}
-
-            {selectedCategory?.type === "Job" && (
-              <>
-                {/* Job Type as text field */}
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Job Type"
-                  name="jobType"
-                  value={editFormValues.jobType}
-                  onChange={handleInputChange}
-                />
-
-                {/* Job Name as text field */}
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Job Name"
-                  name="jobName"
-                  value={editFormValues.jobName}
-                  onChange={handleInputChange}
-                />
-              </>
-            )}
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Type (e.g., Academic)"
+              name="type"
+              value={editFormValues.type}
+              onChange={handleInputChange}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Name (e.g., HSC 2027)"
+              name="name"
+              value={editFormValues.name}
+              onChange={handleInputChange}
+            />
           </Box>
         </DialogContent>
         <DialogActions>
@@ -482,7 +303,7 @@ const Category = () => {
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete the category "{selectedCategory?.subject}"? This action cannot be undone.
+            Are you sure you want to delete the category "{selectedCategory?.name}"? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>

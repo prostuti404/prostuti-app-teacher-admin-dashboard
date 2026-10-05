@@ -56,8 +56,8 @@ const PaymentTable = () => {
             {payments?.map((payment, index) => (
               <TableRow key={payment._id}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{payment.student_id.name}</TableCell>
-                <TableCell>{payment.student_id.studentId}</TableCell>
+                <TableCell>{payment.student_id?.name || "Unknown Student"}</TableCell>
+                <TableCell>{payment.student_id?.studentId || "N/A"}</TableCell>
 
                 <TableCell>
                   {payment.paymentType === "Subscription" &&

@@ -1,4 +1,4 @@
-import {
+ï»¿import {
   Box,
   Button,
   Chip,
@@ -19,12 +19,8 @@ import {
 } from "@mui/material";
 import { useState, useRef } from "react";
 import { useGetAllStudentsQuery } from "../../../../redux/features/student/studentApi";
-
-const SUB_CATEGORY_MAP: Record<string, string[]> = {
-  Academic: ["Science", "Arts", "Commerce"],
-  Admission: ["Engineering", "Medical", "University"],
-  Job: [],
-};
+import { useGetAllCategoriesQuery } from "../../../../redux/features/category/categoryApi";
+import { ICategory } from "../../../../types/types";
 
 const categoryColorMap: Record<string, "primary" | "secondary" | "success"> = {
   Academic: "primary",
@@ -44,20 +40,35 @@ const subCategoryColorMap: Record<string, "default" | "info" | "warning"> = {
 const StudentManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [mainCategoryFilter, setMainCategoryFilter] = useState("");
-  const [subCategoryFilter, setSubCategoryFilter] = useState("");
+  
+  // New cascading state
+  const [groupFilter, setGroupFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [nameFilter, setNameFilter] = useState("");
   const [subscriptionFilter, setSubscriptionFilter] = useState("");
+  
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Fetch categories for cascading dropdowns
+  const { data: allCategoriesData } = useGetAllCategoriesQuery({ limit: 0 });
+  const categories: ICategory[] = allCategoriesData?.data || [];
+
+  // Derived options based on current selections
+  const availableGroups = Array.from(new Set(categories.map((c) => c.group))).filter(Boolean);
+  const availableTypes = Array.from(new Set(categories.filter((c) => !groupFilter || c.group === groupFilter).map((c) => c.type))).filter(Boolean);
+  const availableNames = Array.from(new Set(categories.filter((c) => (!groupFilter || c.group === groupFilter) && (!typeFilter || c.type === typeFilter)).map((c) => c.name))).filter(Boolean);
+
+  // When sending to backend, we currently map Group->subCategory and Type->mainCategory for backward compatibility
+  // In Phase 2, backend should be updated to accept group, type, name natively.
   const { data, isLoading, isFetching } = useGetAllStudentsQuery({
-    mainCategory: mainCategoryFilter || undefined,
-    subCategory: subCategoryFilter || undefined,
+    // We map the new terminology back to the old one so the backend doesn't crash until it's updated
+    mainCategory: typeFilter || undefined,
+    subCategory: groupFilter || undefined, 
     isSubscribed: subscriptionFilter !== "" ? subscriptionFilter : undefined,
     searchTerm: debouncedSearch || undefined,
   });
 
   const students = (data as any)?.data ?? [];
-  const availableSubCategories = SUB_CATEGORY_MAP[mainCategoryFilter] ?? [];
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -66,21 +77,28 @@ const StudentManagement = () => {
     debounceRef.current = setTimeout(() => setDebouncedSearch(value), 400);
   };
 
-  const handleMainCategoryChange = (value: string) => {
-    setMainCategoryFilter(value);
-    setSubCategoryFilter("");
+  const handleGroupChange = (value: string) => {
+    setGroupFilter(value);
+    setTypeFilter("");
+    setNameFilter("");
+  };
+
+  const handleTypeChange = (value: string) => {
+    setTypeFilter(value);
+    setNameFilter("");
   };
 
   const handleReset = () => {
     setSearchTerm("");
     setDebouncedSearch("");
-    setMainCategoryFilter("");
-    setSubCategoryFilter("");
+    setGroupFilter("");
+    setTypeFilter("");
+    setNameFilter("");
     setSubscriptionFilter("");
   };
 
   const hasActiveFilters =
-    searchTerm || mainCategoryFilter || subCategoryFilter || subscriptionFilter !== "";
+    searchTerm || groupFilter || typeFilter || nameFilter || subscriptionFilter !== "";
 
   return (
     <Box sx={{ width: "100%", height: "100vh" }}>
@@ -110,50 +128,62 @@ const StudentManagement = () => {
             size="small"
           />
 
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel id="category-filter-label">Category</InputLabel>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel id="group-filter-label">Group</InputLabel>
             <Select
-              labelId="category-filter-label"
-              id="category-filter-select"
-              value={mainCategoryFilter}
-              label="Category"
-              onChange={(e) => handleMainCategoryChange(e.target.value)}
+              labelId="group-filter-label"
+              value={groupFilter}
+              label="Group"
+              onChange={(e: any) => handleGroupChange(e.target.value)}
             >
-              <MenuItem value="">All Categories</MenuItem>
-              <MenuItem value="Academic">Academic</MenuItem>
-              <MenuItem value="Admission">Admission</MenuItem>
-              <MenuItem value="Job">Job</MenuItem>
+              <MenuItem value="">All Groups</MenuItem>
+              {availableGroups.map((g) => (
+                <MenuItem key={g} value={g}>{g}</MenuItem>
+              ))}
             </Select>
           </FormControl>
 
-          {availableSubCategories.length > 0 && (
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel id="subcategory-filter-label">Sub-category</InputLabel>
+          {groupFilter && (
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel id="type-filter-label">Type</InputLabel>
               <Select
-                labelId="subcategory-filter-label"
-                id="subcategory-filter-select"
-                value={subCategoryFilter}
-                label="Sub-category"
-                onChange={(e) => setSubCategoryFilter(e.target.value)}
+                labelId="type-filter-label"
+                value={typeFilter}
+                label="Type"
+                onChange={(e: any) => handleTypeChange(e.target.value)}
               >
-                <MenuItem value="">All Sub-categories</MenuItem>
-                {availableSubCategories.map((sub) => (
-                  <MenuItem key={sub} value={sub}>
-                    {sub}
-                  </MenuItem>
+                <MenuItem value="">All Types</MenuItem>
+                {availableTypes.map((t) => (
+                  <MenuItem key={t} value={t}>{t}</MenuItem>
                 ))}
               </Select>
             </FormControl>
           )}
 
-          <FormControl size="small" sx={{ minWidth: 180 }}>
+          {typeFilter && availableNames.length > 0 && (
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel id="name-filter-label">Name</InputLabel>
+              <Select
+                labelId="name-filter-label"
+                value={nameFilter}
+                label="Name"
+                onChange={(e: any) => setNameFilter(e.target.value)}
+              >
+                <MenuItem value="">All Names</MenuItem>
+                {availableNames.map((n) => (
+                  <MenuItem key={n} value={n}>{n}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
+          <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel id="subscription-filter-label">Subscription</InputLabel>
             <Select
               labelId="subscription-filter-label"
-              id="subscription-filter-select"
               value={subscriptionFilter}
               label="Subscription"
-              onChange={(e) => setSubscriptionFilter(e.target.value)}
+              onChange={(e: any) => setSubscriptionFilter(e.target.value)}
             >
               <MenuItem value="">All Students</MenuItem>
               <MenuItem value="true">Active</MenuItem>
@@ -178,11 +208,14 @@ const StudentManagement = () => {
         {/* Active filter chips */}
         {hasActiveFilters && (
           <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
-            {mainCategoryFilter && (
-              <Chip size="small" label={`Category: ${mainCategoryFilter}`} onDelete={() => handleMainCategoryChange("")} />
+            {groupFilter && (
+              <Chip size="small" label={`Group: ${groupFilter}`} onDelete={() => handleGroupChange("")} />
             )}
-            {subCategoryFilter && (
-              <Chip size="small" label={`Sub-category: ${subCategoryFilter}`} onDelete={() => setSubCategoryFilter("")} />
+            {typeFilter && (
+              <Chip size="small" label={`Type: ${typeFilter}`} onDelete={() => handleTypeChange("")} />
+            )}
+            {nameFilter && (
+              <Chip size="small" label={`Name: ${nameFilter}`} onDelete={() => setNameFilter("")} />
             )}
             {subscriptionFilter !== "" && (
               <Chip
@@ -219,8 +252,8 @@ const StudentManagement = () => {
                   <TableCell>Student ID</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Contact</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Sub-category</TableCell>
+                  <TableCell>Type (Legacy)</TableCell>
+                  <TableCell>Sub (Legacy)</TableCell>
                   <TableCell>Subscription</TableCell>
                 </TableRow>
               </TableHead>
@@ -238,9 +271,9 @@ const StudentManagement = () => {
                           {student.studentId}
                         </Typography>
                       </TableCell>
-                      <TableCell>{student.name || "—"}</TableCell>
+                      <TableCell>{student.name || "-"}</TableCell>
                       <TableCell>
-                        <Typography variant="body2">{student.phone || student.email || "—"}</Typography>
+                        <Typography variant="body2">{student.phone || student.email || "-"}</Typography>
                       </TableCell>
                       <TableCell>
                         {mainCat ? (

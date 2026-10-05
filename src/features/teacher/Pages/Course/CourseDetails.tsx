@@ -6,18 +6,17 @@ import CustomAutoComplete from "../../../../shared/components/CustomAutoComplete
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useAppDispatch } from "../../../../redux/hooks";
-import { useGetAllCategoryTypesQuery } from "../../../../redux/features/category/categoryApi";
 import Loader from "../../../../shared/components/Loader";
 import { saveCourseIdToStore } from "../../../../redux/features/course/courseSlice";
-import { useGetCategoryForCourseQuery, useSaveCourseMutation } from "../../../../redux/features/course/courseApi";
-import { useGetUnitsQuery, useGetJobTypesQuery, useGetJobNamesQuery } from "../../../../redux/features/category/categoryApi";
+import { useSaveCourseMutation } from "../../../../redux/features/course/courseApi";
+import { useGetAllCategoriesQuery } from "../../../../redux/features/category/categoryApi";
 import { useNavigate } from "react-router-dom";
-import { getUniqueStrings } from "../../../../utils/typeSafeUniqueArrays";
 import Alert from '@mui/material/Alert';
 
 type CourseDetailsProps = {
     setActiveSteps?: React.Dispatch<React.SetStateAction<number>>;
 };
+
 // to hide the default input field for file upload
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -30,6 +29,7 @@ const VisuallyHiddenInput = styled('input')({
     whiteSpace: 'nowrap',
     width: 1,
 });
+
 const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps>(({ setActiveSteps }, ref) => {
     // below state stores the selected image url
     const [tempCover, setTempCover] = useState('');
@@ -45,51 +45,29 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
     const [courseDetails, setCourseDetails] = useState({
         name: "",
         details: "",
-        // isPending: true,
-        // isPublished: false,
-        // teacher_id: "",
     });
 
-    // category params state
-    const [categoryParams, setCategoryParams] = useState({
-        category: '',
-        division: '',
-        subject: '',
-        chapter: '',
-        universityName: '',
-        universityType: '',
-        unit: '', // new field for Admission category
-        jobType: '', // new field for Job category
-        jobName: '', // new field for Job category
+    // cascading category state
+    const [categoryState, setCategoryState] = useState({
+        group: '',
+        type: '',
+        name: '',
     });
 
-    // creating a query parameter object
-    const categoryQueryParams = {
-        ...(categoryParams.category && { category: categoryParams.category }),
-        ...(categoryParams.division && { division: categoryParams.division }),
-        ...(categoryParams.subject && { subject: categoryParams.subject }),
-        ...(categoryParams.chapter && { chapter: categoryParams.chapter }),
-        ...(categoryParams.universityName && { universityName: categoryParams.universityName }),
-        ...(categoryParams.universityType && { universityType: categoryParams.universityType }),
-        ...(categoryParams.unit && { unit: categoryParams.unit }),
-        ...(categoryParams.jobType && { jobType: categoryParams.jobType }),
-        ...(categoryParams.jobName && { jobName: categoryParams.jobName }),
-    };
+    // fetch all categories
+    const { data: allCategoriesData, isLoading: categoryLoading } = useGetAllCategoriesQuery({ limit: 0 });
+    const categories = allCategoriesData?.data || [];
 
-    // fetching all the categories from an api call
-    const { data: categoryTypes, isLoading } = useGetAllCategoryTypesQuery({});
-    // redux api call for fetching all the categories
-    const { data: categoryData, isLoading: categoryLoading } = useGetCategoryForCourseQuery(categoryQueryParams);
-    // fetching units, job types and job names
-    const { data: unitsData, isLoading: unitsLoading } = useGetUnitsQuery({});
-    const { data: jobTypesData, isLoading: jobTypesLoading } = useGetJobTypesQuery({});
-    const { data: jobNamesData, isLoading: jobNamesLoading } = useGetJobNamesQuery(
-        categoryParams.jobType ? { jobType: categoryParams.jobType } : {}
-    );
+    // compute dropdown options
+    interface ICategory { group: string; type: string; name: string; _id: string; }
+    const uniqueGroups = Array.from(new Set(categories.map((c: ICategory) => c.group)));
+    const availableTypes = Array.from(new Set(categories.filter((c: ICategory) => c.group === categoryState.group).map((c: ICategory) => c.type)));
+    const availableNames = Array.from(new Set(categories.filter((c: ICategory) => c.group === categoryState.group && c.type === categoryState.type).map((c: ICategory) => c.name)));
+
+    const selectedCategory = categories.find((c: ICategory) => c.group === categoryState.group && c.type === categoryState.type && c.name === categoryState.name);
+
     // calling the create course method from redux
-    const [saveCourse, { isSuccess, isLoading: creationLoader }] = useSaveCourseMutation();
-
-    // setting the data to local redux store
+    const [saveCourse, { isLoading: creationLoader }] = useSaveCourseMutation();
     const dispatch = useAppDispatch();
 
     // calling the imperative handle to execute submit handler from the parent component
@@ -99,179 +77,65 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
         },
     }));
 
-    // when calling the mutation api
-    if (isLoading || categoryLoading || creationLoader || unitsLoading || jobTypesLoading || jobNamesLoading) {
+    if (categoryLoading || creationLoader) {
         return <Loader />;
     }
 
-    // extracting divisions subjects, chapter, universityType, universityName, from the category data
-    const divisions = getUniqueStrings(categoryData?.data || [], 'division');
-    const chapters = getUniqueStrings(categoryData?.data || [], 'chapter');
-    const universityNames = getUniqueStrings(categoryData?.data || [], 'universityName');
-    const universityTypes = getUniqueStrings(categoryData?.data || [], 'universityType');
-
-    // Handle units data - ensure it's properly extracted
-    const units = Array.isArray(unitsData?.data) ?
-        (typeof unitsData.data[0] === 'string' ?
-                unitsData.data :
-                getUniqueStrings(unitsData.data, 'unit')
-        ) : [];
-
-    // Handle job types data - ensure it's properly extracted
-    const jobTypes = Array.isArray(jobTypesData?.data) ?
-        (typeof jobTypesData.data[0] === 'string' ?
-                jobTypesData.data :
-                getUniqueStrings(jobTypesData.data, 'jobType')
-        ) : [];
-
-    // Handle job names data - ensure it's properly extracted
-    const jobNames = Array.isArray(jobNamesData?.data) ?
-        (typeof jobNamesData.data[0] === 'string' ?
-                jobNamesData.data :
-                getUniqueStrings(jobNamesData.data, 'jobName')
-        ) : [];
-
-    // Filter subjects based on selected category parameters
-    let subjects = getUniqueStrings(categoryData?.data || [], 'subject');
-
-    // Apply filtering based on selected category type
-    if (categoryParams.category === 'Academic' && categoryParams.division) {
-        const filtered = (categoryData?.data || []).filter(item =>
-            item.division === categoryParams.division
-        );
-        subjects = getUniqueStrings(filtered, 'subject');
-    }
-    else if (categoryParams.category === 'Admission' && categoryParams.universityType) {
-        let filtered = (categoryData?.data || []).filter(item =>
-            item.universityType === categoryParams.universityType
-        );
-
-        if (categoryParams.universityName) {
-            filtered = filtered.filter(item =>
-                item.universityName === categoryParams.universityName
-            );
-        }
-
-        subjects = getUniqueStrings(filtered, 'subject');
-    }
-    else if (categoryParams.category === 'Job' && categoryParams.jobType) {
-        let filtered = (categoryData?.data || []).filter(item =>
-            item.jobType === categoryParams.jobType
-        );
-
-        if (categoryParams.jobName) {
-            filtered = filtered.filter(item =>
-                item.jobName === categoryParams.jobName
-            );
-        }
-
-        subjects = getUniqueStrings(filtered, 'subject');
-    }
-
-    const categoryId = categoryData?.data[0]?._id;
-
-    //^handling the cover image change
+    // handling the cover image change
     const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
             setTempCover(URL.createObjectURL(file));
-            // Store the file separately for the form submission
             setCoverUmg(file);
-            // Clear validation error if exists
             if (errors.coverImage) {
                 setErrors((prev) => ({ ...prev, coverImage: [] }));
             }
         }
     };
 
-    //^ handling non file form data
+    // handling non file form data
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setCourseDetails((prevState) => ({ ...prevState, [name]: value }));
-        // Clear validation error if exists
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: [] }));
         }
     };
 
-    const handleCategory = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let { name, value } = e.target;
-
-        // Map 'Combined / All Categories' back to 'Common' for backend
-        if (name === 'division' && value === 'Combined / All Categories') {
-            value = 'Common';
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        
+        const newState = { ...categoryState, [name]: value };
+        if (name === 'group') {
+            newState.type = '';
+            newState.name = '';
+        } else if (name === 'type') {
+            newState.name = '';
         }
+        
+        setCategoryState(newState);
 
-        // Create updated state with the new value
-        const updatedCategoryParams = {
-            ...categoryParams,
-            [name]: value
-        };
-
-        // Clear dependent fields when parent field changes
-        if (name === 'category') {
-            // Reset all dependent fields when category changes
-            updatedCategoryParams.division = '';
-            updatedCategoryParams.subject = '';
-            updatedCategoryParams.chapter = '';
-            updatedCategoryParams.universityName = '';
-            updatedCategoryParams.universityType = '';
-            updatedCategoryParams.unit = '';
-            updatedCategoryParams.jobType = '';
-            updatedCategoryParams.jobName = '';
-        } else if (name === 'division') {
-            // Reset subject and chapter when division changes
-            updatedCategoryParams.subject = '';
-            updatedCategoryParams.chapter = '';
-        } else if (name === 'subject') {
-            // Reset chapter when subject changes
-            updatedCategoryParams.chapter = '';
-        } else if (name === 'universityType') {
-            // Reset universityName and unit when universityType changes
-            updatedCategoryParams.universityName = '';
-            updatedCategoryParams.unit = '';
-            updatedCategoryParams.subject = '';
-        } else if (name === 'universityName') {
-            // Reset subject when universityName changes
-            updatedCategoryParams.subject = '';
-        } else if (name === 'jobType') {
-            // Reset jobName when jobType changes
-            updatedCategoryParams.jobName = '';
-            updatedCategoryParams.subject = '';
-        } else if (name === 'jobName') {
-            // Reset subject when jobName changes
-            updatedCategoryParams.subject = '';
-        }
-
-        // Update state with the new values
-        setCategoryParams(updatedCategoryParams);
-
-        // Clear validation error if exists
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: [] }));
+        if (errors.category) {
+            setErrors((prev) => ({ ...prev, category: [] }));
         }
     };
 
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
 
-        // error handling start
         const validationErrors: { [key: string]: string[]; } = {};
         const snackbarMessages: string[] = [];
 
-        // Validate category
-        if (!categoryParams.category) {
-            validationErrors.category = ['Course category is required'];
-            snackbarMessages.push('Course category is required');
+        if (!selectedCategory?._id) {
+            validationErrors.category = ['Please select a complete category (Group, Type, Name)'];
+            snackbarMessages.push('Please select a complete category');
         }
 
-        // Validate cover image
         if (!coverImg) {
             validationErrors.coverImage = ['Cover image is required'];
             snackbarMessages.push('Cover image is required');
         }
 
-        // If validation errors exist, stop submission
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             setErrorMessages(snackbarMessages);
@@ -280,17 +144,15 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
             return;
         }
 
-        // error handling end
         const courseData = new FormData();
         if (coverImg) courseData.append('coverImage', coverImg);
 
         const updatedCourseDetails = {
             ...courseDetails,
-            category_id: categoryId
+            category_id: selectedCategory._id
         };
         courseData.append('courseData', JSON.stringify(updatedCourseDetails));
 
-        // Reset previous errors
         setErrors({});
 
         const result = await saveCourse(courseData);
@@ -308,12 +170,11 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                         errorMap[source.path] = [];
                     }
                     errorMap[source.path].push(source.message);
-                    allMessages.push(source.message); // collect for Snackbar
+                    allMessages.push(source.message);
                 });
                 setErrors(errorMap);
                 setErrorMessages(allMessages);
                 setOpenErrorSnackbar(true);
-                // scroll to the top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
             return;
@@ -321,21 +182,8 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
 
         const course_id = result?.data?.data?._id;
         dispatch(saveCourseIdToStore({ course_id }));
-        setCategoryParams({
-            category: '',
-            division: '',
-            subject: '',
-            chapter: '',
-            universityName: '',
-            universityType: '',
-            unit: '',
-            jobType: '',
-            jobName: '',
-        });
-        setCourseDetails({
-            name: "",
-            details: "",
-        });
+        setCategoryState({ group: '', type: '', name: '' });
+        setCourseDetails({ name: "", details: "" });
         navigate('/teacher/create-course/create-lessons');
         setActiveSteps?.(prevStep => prevStep + 1);
     };
@@ -347,7 +195,7 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                     <form encType="multipart/form-data" onSubmit={handleSubmit}>
                         <Grid container spacing={2}>
                             {/* course name field */}
-                            <Grid size={6}>
+                            <Grid size={12}>
                                 <CustomLabel fieldName="Course Name*" />
                                 <CustomTextField
                                     name="name"
@@ -358,162 +206,44 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                     required
                                 />
                             </Grid>
-                            {/* course category field */}
-                            <Grid size={6}>
-                                <CustomLabel fieldName="Course Category*" />
+
+                            {/* category fields */}
+                            <Grid size={4}>
+                                <CustomLabel fieldName="Category Group*" />
                                 <CustomAutoComplete
-                                    name='category'
-                                    options={categoryTypes?.data || []}
-                                    value={categoryParams.category}
-                                    handleInput={handleCategory}
+                                    name="group"
+                                    options={uniqueGroups as string[]}
+                                    value={categoryState.group}
+                                    handleInput={handleCategoryChange}
                                     error={!!errors.category}
-                                    helperText={errors.category?.join(' ')}
                                 />
                             </Grid>
-                            {/* 2nd row filter columns */}
-                            {
-                                (categoryParams.category === 'Academic') && (
-                                    <>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="Division*" />
-                                            <CustomAutoComplete
-                                                options={divisions?.map(d => d === 'Common' ? 'Combined / All Categories' : d) || []}
-                                                name={`division`}
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.division === 'Common' ? 'Combined / All Categories' : categoryParams.division}
-                                            />
-                                        </Grid>
-                                        {categoryParams.division && (
-                                            <>
-                                                <Grid size={4}>
-                                                    <CustomLabel fieldName="Subject*" />
-                                                    <CustomAutoComplete
-                                                        options={subjects || []}
-                                                        name={`subject`}
-                                                        handleInput={handleCategory}
-                                                        value={categoryParams.subject}
-                                                        required={true}
-                                                    />
-                                                </Grid>
-                                                {categoryParams.subject && (
-                                                    <Grid size={4}>
-                                                        <CustomLabel fieldName="Chapter*" />
-                                                        <CustomAutoComplete
-                                                            options={chapters || []}
-                                                            name={`chapter`}
-                                                            handleInput={handleCategory}
-                                                            required={true}
-                                                            value={categoryParams.chapter}
-                                                        />
-                                                    </Grid>
-                                                )}
-                                            </>
-                                        )}
-                                    </>)
-                            }
-                            {/* in case of admission */}
-                            {
-                                (categoryParams.category === 'Admission') && (
-                                    <>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="University Type*" />
-                                            <CustomAutoComplete
-                                                options={universityTypes || []}
-                                                name={`universityType`}
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.universityType}
-                                            />
-                                        </Grid>
-                                        {categoryParams.universityType && (
-                                            <>
-                                                <Grid size={4}>
-                                                    <CustomLabel fieldName="University Name*" />
-                                                    <CustomAutoComplete
-                                                        options={universityNames || []}
-                                                        name={`universityName`}
-                                                        handleInput={handleCategory}
-                                                        required={true}
-                                                        value={categoryParams.universityName}
-                                                    />
-                                                </Grid>
-                                                {categoryParams.universityType === 'University' && (
-                                                    <Grid size={4}>
-                                                        <CustomLabel fieldName="Unit*" />
-                                                        <CustomAutoComplete
-                                                            options={units || []}
-                                                            name="unit"
-                                                            handleInput={handleCategory}
-                                                            required={true}
-                                                            value={categoryParams.unit}
-                                                            error={!!errors.unit?.length}
-                                                            helperText={errors.unit?.join(' ')}
-                                                        />
-                                                    </Grid>
-                                                )}
-                                                {categoryParams.universityName && (
-                                                    <Grid size={4}>
-                                                        <CustomLabel fieldName="Subject*" />
-                                                        <CustomAutoComplete
-                                                            options={subjects || []}
-                                                            name={`subject`}
-                                                            handleInput={handleCategory}
-                                                            required={true}
-                                                            value={categoryParams.subject}
-                                                        />
-                                                    </Grid>
-                                                )}
-                                            </>
-                                        )}
-                                    </>)
-                            }
-                            {/* in case of job */}
-                            {
-                                (categoryParams.category === 'Job') && (
-                                    <>
-                                        <Grid size={4}>
-                                            <CustomLabel fieldName="Job Type*" />
-                                            <CustomAutoComplete
-                                                options={jobTypes || []}
-                                                name="jobType"
-                                                handleInput={handleCategory}
-                                                required={true}
-                                                value={categoryParams.jobType}
-                                                error={!!errors.jobType?.length}
-                                                helperText={errors.jobType?.join(' ')}
-                                            />
-                                        </Grid>
-                                        {categoryParams.jobType && (
-                                            <>
-                                                <Grid size={4}>
-                                                    <CustomLabel fieldName="Job Name*" />
-                                                    <CustomAutoComplete
-                                                        options={jobNames || []}
-                                                        name="jobName"
-                                                        handleInput={handleCategory}
-                                                        required={true}
-                                                        value={categoryParams.jobName}
-                                                        error={!!errors.jobName?.length}
-                                                        helperText={errors.jobName?.join(' ')}
-                                                    />
-                                                </Grid>
-                                                {categoryParams.jobName && (
-                                                    <Grid size={4}>
-                                                        <CustomLabel fieldName="Subject*" />
-                                                        <CustomAutoComplete
-                                                            options={subjects || []}
-                                                            name={`subject`}
-                                                            handleInput={handleCategory}
-                                                            required={true}
-                                                            value={categoryParams.subject}
-                                                        />
-                                                    </Grid>
-                                                )}
-                                            </>
-                                        )}
-                                    </>)
-                            }
+                            {categoryState.group && (
+                                <Grid size={4}>
+                                    <CustomLabel fieldName="Category Type*" />
+                                    <CustomAutoComplete
+                                        name="type"
+                                        options={availableTypes as string[]}
+                                        value={categoryState.type}
+                                        handleInput={handleCategoryChange}
+                                        error={!!errors.category}
+                                    />
+                                </Grid>
+                            )}
+                            {categoryState.type && (
+                                <Grid size={4}>
+                                    <CustomLabel fieldName="Category Name*" />
+                                    <CustomAutoComplete
+                                        name="name"
+                                        options={availableNames as string[]}
+                                        value={categoryState.name}
+                                        handleInput={handleCategoryChange}
+                                        error={!!errors.category}
+                                        helperText={errors.category?.join(' ')}
+                                    />
+                                </Grid>
+                            )}
+
                             {/* cover image upload button */}
                             <Grid size={12}>
                                 <CustomLabel fieldName="Upload Cover Image*" />
@@ -525,7 +255,6 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                              src={tempCover || ''}
                                              style={{ width: "100%", height: "100%", objectFit: 'cover', display: tempCover === '' ? 'none' : 'block' }}
                                         />
-                                        {/* new image upload button */}
                                         <Button component="label"
                                                 size="small"
                                                 variant="text"
@@ -533,7 +262,6 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                                 startIcon={<CloudUploadIcon />}
                                                 sx={{ position: 'absolute', top: "45%", left: '43%', color: "gray.700", borderRadius: "8px", cursor: "pointer", backgroundColor: tempCover ? "white" : 'transparent' }}
                                         >
-
                                             {tempCover ? 'Change Cover Image' : 'Click to Upload'}
                                             <VisuallyHiddenInput
                                                 type="file"
@@ -542,14 +270,13 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                                         </Button>
                                     </Box>
                                 </Card>
-                                {/* for showing error message */}
                                 {errors.coverImage && (
                                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                                         {errors.coverImage.join(' ')}
                                     </Typography>
                                 )}
-
                             </Grid>
+                            
                             {/* course details */}
                             <Grid size={12}>
                                 <CustomLabel fieldName="Course Details*" />
@@ -567,7 +294,7 @@ const CourseDetails = forwardRef<{ submitForm: () => void; }, CourseDetailsProps
                     </form>
                 </Paper>
             </Box>
-            {/* showing alert for what happened after submitting the request */}
+            
             <Snackbar
                 open={openErrorSnackbar}
                 autoHideDuration={6000}

@@ -1,502 +1,111 @@
-// prostuti-app-teacher-admin-dashboard-staging/src/features/admin/Pages/Category/AddCategory/AddCategoryForm.tsx
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
+﻿import {
+  Box,
   Button,
+  CircularProgress,
   MenuItem,
-  Select,
-  SnackbarCloseReason,
+  Paper,
   TextField,
   Typography,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
-import { useState, useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
-import {
-  categoryDivision,
-  categoryType,
-  categoryUniversityType,
-} from "../../../../../interface/category.interface";
-import { useCreateCategoryMutation } from "../../../../../redux/features/category/categoryApi";
-import Loader from "../../../../../shared/components/Loader";
-import { createCategorySchema } from "../../../../../validation/category.validation";
-import Alert from "../../../../../shared/components/Alert";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-type CreateCategoryInput = {
-  type: string;
-  division?: string;
-  subject: string;
-  chapter?: string;
-  lesson?: string;
-  universityType?: string;
-  universityName?: string;
-  unit?: string;
-  jobType?: string;
-  jobName?: string;
-};
+import { useCreateCategoryMutation } from "../../../../../redux/features/category/categoryApi";
+import toast from "react-hot-toast";
 
 const AddCategoryForm = () => {
-  const [createCategory, { isLoading, isSuccess, error }] =
-    useCreateCategoryMutation();
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-
-  // No need to fetch dropdown data from API
   const navigate = useNavigate();
-  const {
-    control,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors },
-  } = useForm<CreateCategoryInput>({
-    resolver: zodResolver(createCategorySchema),
-    defaultValues: {
-      type: "",
-      division: "",
-      subject: "",
-      chapter: "",
-      lesson: "",
-      universityType: "",
-      universityName: "",
-      unit: "",
-      jobType: "",
-      jobName: "",
-    },
+  const [createCategory, { isLoading }] = useCreateCategoryMutation();
+
+  const [formValues, setFormValues] = useState({
+    group: "",
+    type: "",
+    name: "",
   });
-  const typeValue = watch("type");
-  const universityTypeValue = watch("universityType");
 
-  const onSubmit = async (data: CreateCategoryInput) => {
-    const trimmedData = {
-      ...data,
-      subject: data.subject?.trim(),
-      chapter: data.chapter?.trim(),
-      universityName: data.universityName?.trim(),
-      universityType: data.universityType?.trim(),
-      unit: data.unit?.trim(),
-      lesson: data.lesson?.trim(),
-      jobType: data.jobType?.trim(),
-      jobName: data.jobName?.trim(),
-    };
-
-    const cleanedData = Object.fromEntries(
-      Object.entries(trimmedData).filter(([key, value]) => value !== "")
-    );
-    await createCategory(cleanedData);
-    reset();
-    setOpenSnackbar(true);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleCloseSnackbar = (
-    event: React.SyntheticEvent | Event,
-    reason?: SnackbarCloseReason
-  ) => {
-    if (reason === "clickaway") {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formValues.group || !formValues.type || !formValues.name) {
+      toast.error("Please fill all required fields");
       return;
     }
-    setOpenSnackbar(false);
+
+    try {
+      await createCategory(formValues).unwrap();
+      toast.success("Category created successfully");
+      navigate("/admin/category");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.data?.message || "Failed to create category");
+    }
   };
 
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  if (error) {
-    console.log(error);
-  }
-
   return (
-    <>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Grid
-          container
-          spacing={3}>
-          {/* Category Type */}
-          <Grid size={4}>
-            <Controller
-              name='type'
-              control={control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  fullWidth
-                  error={!!errors.type}
-                  displayEmpty
-                  inputProps={{ "aria-label": "Type" }}>
-                  <MenuItem
-                    value=''
-                    disabled>
-                    Select Type
-                  </MenuItem>
-                  {categoryType.map((type) => (
-                    <MenuItem
-                      key={type}
-                      value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
-            />
-            {errors.type && (
-              <Typography
-                color='error'
-                variant='body2'>
-                {errors.type?.message}
-              </Typography>
-            )}
-          </Grid>
+    <Box sx={{ width: "100%", maxWidth: "800px", margin: "0 auto" }}>
+      <Paper variant="outlined" sx={{ borderRadius: "10px", p: { xs: 2, md: 4 } }}>
+        <Typography variant="h5" component="h2" fontWeight="600" mb={3}>
+          Add New Category
+        </Typography>
 
-          {/* Academic Type Fields */}
-          {typeValue === "Academic" && (
-            <>
-              <Grid size={4}>
-                <Controller
-                  name='division'
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      fullWidth
-                      error={!!errors.division}
-                      displayEmpty
-                      inputProps={{ "aria-label": "Division" }}>
-                      <MenuItem
-                        value=''
-                        disabled>
-                        Select Division
-                      </MenuItem>
-                      {categoryDivision.map((div) => (
-                        <MenuItem
-                          key={div}
-                          value={div}>
-                          {div}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                />
-                {errors.division && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.division?.message}
-                  </Typography>
-                )}
-              </Grid>
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+          <TextField
+            fullWidth
+            required
+            margin="normal"
+            label="Group (e.g., Science, Arts, Commerce)"
+            name="group"
+            value={formValues.group}
+            onChange={handleInputChange}
+          />
+          
+          <TextField
+            fullWidth
+            required
+            margin="normal"
+            label="Type (e.g., Academic, Admission, Job)"
+            name="type"
+            value={formValues.type}
+            onChange={handleInputChange}
+          />
+          
+          <TextField
+            fullWidth
+            required
+            margin="normal"
+            label="Name (e.g., HSC 2027, Medical, Engineering)"
+            name="name"
+            value={formValues.name}
+            onChange={handleInputChange}
+          />
 
-              <Grid size={4}>
-                <Controller
-                  name='subject'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='Subject'
-                      fullWidth
-                      error={!!errors.subject}
-                    />
-                  )}
-                />
-                {errors.subject && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.subject?.message}
-                  </Typography>
-                )}
-              </Grid>
-
-              <Grid size={4}>
-                <Controller
-                  name='chapter'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='Chapter'
-                      fullWidth
-                      error={!!errors.chapter}
-                    />
-                  )}
-                />
-                {errors.chapter && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.chapter?.message}
-                  </Typography>
-                )}
-              </Grid>
-
-              <Grid size={4}>
-                <Controller
-                  name='lesson'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='Lesson'
-                      fullWidth
-                      error={!!errors.lesson}
-                    />
-                  )}
-                />
-                {errors.lesson && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.lesson?.message}
-                  </Typography>
-                )}
-              </Grid>
-            </>
-          )}
-
-          {/* Admission Type Fields */}
-          {typeValue === "Admission" && (
-            <>
-              <Grid size={4}>
-                <Controller
-                  name='universityType'
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      fullWidth
-                      error={!!errors.universityType}
-                      displayEmpty
-                      inputProps={{ "aria-label": "University Type" }}>
-                      <MenuItem
-                        value=''
-                        disabled>
-                        Select University Type
-                      </MenuItem>
-                      {categoryUniversityType.map((type) => (
-                        <MenuItem
-                          key={type}
-                          value={type}>
-                          {type}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                />
-                {errors.universityType && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.universityType.message}
-                  </Typography>
-                )}
-              </Grid>
-
-              <Grid size={4}>
-                <Controller
-                  name='universityName'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='University Name'
-                      fullWidth
-                      error={!!errors.universityName}
-                    />
-                  )}
-                />
-                {errors.universityName && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.universityName?.message}
-                  </Typography>
-                )}
-              </Grid>
-
-              <Grid size={4}>
-                <Controller
-                  name='subject'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='Subject'
-                      fullWidth
-                      error={!!errors.subject}
-                    />
-                  )}
-                />
-                {errors.subject && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.subject?.message}
-                  </Typography>
-                )}
-              </Grid>
-
-              <Grid size={4}>
-                <Controller
-                  name='chapter'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='Chapter'
-                      fullWidth
-                      error={!!errors.chapter}
-                    />
-                  )}
-                />
-                {errors.chapter && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.chapter?.message}
-                  </Typography>
-                )}
-              </Grid>
-
-              {universityTypeValue === "University" && (
-                <Grid size={4}>
-                  <Controller
-                    name='unit'
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label='Unit'
-                        fullWidth
-                        error={!!errors.unit}
-                      />
-                    )}
-                  />
-                  {errors.unit && (
-                    <Typography
-                      color='error'
-                      variant='body2'>
-                      {errors.unit?.message}
-                    </Typography>
-                  )}
-                </Grid>
-              )}
-            </>
-          )}
-
-          {/* Job Type Fields */}
-          {typeValue === "Job" && (
-            <>
-              <Grid size={4}>
-                <Controller
-                  name='jobType'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='Job Type'
-                      fullWidth
-                      error={!!errors.jobType}
-                    />
-                  )}
-                />
-                {errors.jobType && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.jobType?.message}
-                  </Typography>
-                )}
-              </Grid>
-
-              <Grid size={4}>
-                <Controller
-                  name='jobName'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='Job Name'
-                      fullWidth
-                      error={!!errors.jobName}
-                    />
-                  )}
-                />
-                {errors.jobName && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.jobName?.message}
-                  </Typography>
-                )}
-              </Grid>
-
-              <Grid size={4}>
-                <Controller
-                  name='subject'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='Subject'
-                      fullWidth
-                      error={!!errors.subject}
-                    />
-                  )}
-                />
-                {errors.subject && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.subject?.message}
-                  </Typography>
-                )}
-              </Grid>
-
-              <Grid size={4}>
-                <Controller
-                  name='chapter'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label='Chapter'
-                      fullWidth
-                      error={!!errors.chapter}
-                    />
-                  )}
-                />
-                {errors.chapter && (
-                  <Typography
-                    color='error'
-                    variant='body2'>
-                    {errors.chapter?.message}
-                  </Typography>
-                )}
-              </Grid>
-            </>
-          )}
-
-          {/* Submit Button */}
-          <Grid size={12}>
+          <Box sx={{ mt: 4, display: "flex", gap: 2, justifyContent: "flex-end" }}>
             <Button
-              type='submit'
-              variant='contained'
-              color='primary'
-              fullWidth>
-              Create Category
+              variant="outlined"
+              onClick={() => navigate("/admin/category")}
+              disabled={isLoading}
+            >
+              Cancel
             </Button>
-          </Grid>
-        </Grid>
-      </form>
-
-      <Alert
-        openSnackbar={openSnackbar}
-        autoHideDuration={5000}
-        handleCloseSnackbar={handleCloseSnackbar}
-        isSuccess={isSuccess}
-      />
-    </>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isLoading}
+              startIcon={isLoading ? <CircularProgress size={20} /> : null}
+            >
+              {isLoading ? "Saving..." : "Save Category"}
+            </Button>
+          </Box>
+        </Box>
+      </Paper>
+    </Box>
   );
 };
 
